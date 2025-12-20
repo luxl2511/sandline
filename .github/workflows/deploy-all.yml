@@ -1,0 +1,63 @@
+name: Deploy All (Backend + Frontend)
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_backend:
+        description: 'Deploy backend to Fly.io'
+        required: true
+        default: 'true'
+        type: boolean
+      deploy_frontend:
+        description: 'Deploy frontend to Vercel'
+        required: true
+        default: 'true'
+        type: boolean
+
+jobs:
+  deploy-backend:
+    if: ${{ github.event.inputs.deploy_backend == 'true' }}
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: |
+          cd backend
+          flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLYIO }}
+
+      - name: Health check
+        run: |
+          sleep 10
+          curl -f https://${{ secrets.FLY_APP_NAME }}.fly.dev/api/tracks || exit 1
+
+  deploy-frontend:
+    if: ${{ github.event.inputs.deploy_frontend == 'true' }}
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        run: |
+          cd frontend
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
