@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: postgis/postgis:15-3.4
         env:
           POSTGRES_USER: dakar_user
           POSTGRES_PASSWORD: dakar_pass_dev_only
@@ -121,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15
+        image: postgis/postgis:15-3.4
         env:
           POSTGRES_USER: dakar_user
           POSTGRES_PASSWORD: dakar_pass_dev_only
