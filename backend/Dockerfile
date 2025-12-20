@@ -10,12 +10,17 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy manifests
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 
 # Copy source code
 COPY src ./src
 
-# Build for release
+# Copy migrations and sqlx data for offline mode
+COPY migrations ./migrations
+COPY .sqlx ./.sqlx
+
+# Build for release with offline sqlx mode
+ENV SQLX_OFFLINE=true
 RUN cargo build --release
 
 # Runtime stage

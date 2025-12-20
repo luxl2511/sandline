@@ -6,7 +6,7 @@ use axum::{
 use uuid::Uuid;
 
 use crate::db::DbPool;
-use crate::models::{CreateRoute, UpdateRoute, Route, RouteVersion, RouteWithGeometry};
+use crate::models::{CreateRoute, Route, RouteVersion, RouteWithGeometry, UpdateRoute};
 
 pub async fn list_routes(
     State(pool): State<DbPool>,
@@ -44,7 +44,9 @@ pub async fn list_routes(
                 owner_id: row.owner_id,
                 created_at: row.created_at,
             },
-            geometry: row.geometry.unwrap_or(serde_json::json!({"type": "MultiLineString", "coordinates": []})),
+            geometry: row
+                .geometry
+                .unwrap_or(serde_json::json!({"type": "MultiLineString", "coordinates": []})),
         })
         .collect();
 
@@ -89,7 +91,9 @@ pub async fn get_route(
             owner_id: route.owner_id,
             created_at: route.created_at,
         },
-        geometry: route.geometry.unwrap_or(serde_json::json!({"type": "MultiLineString", "coordinates": []})),
+        geometry: route
+            .geometry
+            .unwrap_or(serde_json::json!({"type": "MultiLineString", "coordinates": []})),
     }))
 }
 
@@ -146,20 +150,16 @@ pub async fn update_route(
     Path(id): Path<Uuid>,
     Json(payload): Json<UpdateRoute>,
 ) -> Result<Json<RouteWithGeometry>, StatusCode> {
-    let route = sqlx::query_as!(
-        Route,
-        "SELECT * FROM routes WHERE id = $1",
-        id
-    )
-    .fetch_one(&pool)
-    .await
-    .map_err(|e| match e {
-        sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
-        _ => {
-            tracing::error!("Failed to fetch route: {}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    })?;
+    let route = sqlx::query_as!(Route, "SELECT * FROM routes WHERE id = $1", id)
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| match e {
+            sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,
+            _ => {
+                tracing::error!("Failed to fetch route: {}", e);
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        })?;
 
     sqlx::query!(
         "INSERT INTO route_versions (route_id, geometry) VALUES ($1, $2)",

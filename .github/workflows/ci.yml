@@ -11,6 +11,20 @@ jobs:
   validate-backend:
     name: Validate Backend (Rust)
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: dakar_user
+          POSTGRES_PASSWORD: dakar_pass_dev_only
+          POSTGRES_DB: dakar_planner
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
 
@@ -33,6 +47,21 @@ jobs:
             backend/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('backend/Cargo.lock') }}
 
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features postgres
+
+      - name: Run database migrations
+        run: sqlx database create && sqlx migrate run
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
+
+      - name: Prepare sqlx offline data
+        run: cargo sqlx prepare
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
+
       - name: Check formatting
         run: cargo fmt -- --check
         working-directory: backend
@@ -40,14 +69,20 @@ jobs:
       - name: Clippy (linter)
         run: cargo clippy -- -D warnings
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
 
       - name: Build
         run: cargo build --verbose
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
 
       - name: Run tests
         run: cargo test --verbose
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
 
   validate-frontend:
     name: Validate Frontend (Next.js)
@@ -84,8 +119,44 @@ jobs:
   validate-docker:
     name: Validate Docker Build
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: dakar_user
+          POSTGRES_PASSWORD: dakar_pass_dev_only
+          POSTGRES_DB: dakar_planner
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features postgres
+
+      - name: Run database migrations
+        run: sqlx database create && sqlx migrate run
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
+
+      - name: Prepare sqlx offline data for Docker
+        run: cargo sqlx prepare
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dakar_user:dakar_pass_dev_only@localhost:5432/dakar_planner
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
