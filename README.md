@@ -42,13 +42,18 @@ Visit http://localhost:3000
 
 Deploy to **Vercel** (frontend) + **Fly.io** (backend) + **Supabase** (database):
 
+⚠️ **Note:** Deployments run from the `main` branch. If you're on a feature branch:
 ```bash
-# See detailed deployment guide
-cat DEPLOYMENT.md
+./scripts/merge-to-main.sh    # Merge to main first
 ```
 
-**Quick Deploy:**
-1. Create accounts on Vercel, Fly.io, and Supabase
+**Quick Deploy (from main branch):**
+```bash
+./scripts/quick-deploy.sh     # Interactive deployment wizard
+```
+
+**Or manual deployment:**
+1. Merge to `main` branch: `./scripts/merge-to-main.sh`
 2. Setup Supabase database: Run `scripts/setup-supabase.sql`
 3. Deploy backend: `./scripts/deploy-backend.sh`
 4. Deploy frontend: `./scripts/deploy-frontend.sh`
@@ -75,6 +80,7 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete step-by-step instructions.
 
 - **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - 3-week PoC development roadmap
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide (Vercel + Fly.io + Supabase)
+- **[MERGE_TO_MAIN.md](./MERGE_TO_MAIN.md)** - Guide for merging feature branch to main
 
 ## Tech Stack
 

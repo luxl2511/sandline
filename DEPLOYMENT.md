@@ -7,6 +7,26 @@ This guide covers deploying the Dakar Planner application using:
 
 ---
 
+## 🚨 Important: Main Branch Deployment
+
+**Deployments are configured to run from the `main` branch.**
+
+If you're currently on a feature branch (like `claude/dakar-planner-boilerplate-2zCQw`), you need to merge to `main` first:
+
+```bash
+# Quick merge to main
+./scripts/merge-to-main.sh
+
+# Or see detailed instructions
+cat MERGE_TO_MAIN.md
+```
+
+**Automatic Deployments:**
+- Push to `main` → GitHub Actions deploys backend to Fly.io
+- Push to `main` → Vercel deploys frontend (after connecting repo)
+
+---
+
 ## Prerequisites
 
 1. **Accounts**
