@@ -1,0 +1,17 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_API_URL": {
+      "description": "Backend API URL (from Fly.io deployment)",
+      "value": "https://your-app.fly.dev"
+    },
+    "NEXT_PUBLIC_MAPBOX_TOKEN": {
+      "description": "Mapbox access token",
+      "value": ""
+    }
+  }
+}

@@ -18,37 +18,42 @@ A collaborative route planning application for off-road and rally racing, featur
 
 ## Quick Start
 
-### Prerequisites
+### Local Development
 
+**Prerequisites:**
 - Docker & Docker Compose
 - Node.js 18+
 - Rust 1.70+
-- PostgreSQL 15+ with PostGIS
 
-### Setup
-
+**Setup:**
 ```bash
-# Clone and enter directory
-cd sandline
+# Automated setup
+./scripts/setup.sh
 
-# Start database
-docker-compose up -d
-
-# Setup backend
-cd backend
-cp .env.example .env
-cargo build
-cargo run --bin migrate
-cargo run
-
-# Setup frontend (in new terminal)
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
+# Or manual setup:
+docker-compose up -d          # Start PostgreSQL + PostGIS
+cd backend && cargo run       # Start backend
+cd frontend && npm run dev    # Start frontend
 ```
 
 Visit http://localhost:3000
+
+### Production Deployment
+
+Deploy to **Vercel** (frontend) + **Fly.io** (backend) + **Supabase** (database):
+
+```bash
+# See detailed deployment guide
+cat DEPLOYMENT.md
+```
+
+**Quick Deploy:**
+1. Create accounts on Vercel, Fly.io, and Supabase
+2. Setup Supabase database: Run `scripts/setup-supabase.sql`
+3. Deploy backend: `./scripts/deploy-backend.sh`
+4. Deploy frontend: `./scripts/deploy-frontend.sh`
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete step-by-step instructions.
 
 ## Project Structure
 
@@ -66,9 +71,32 @@ Visit http://localhost:3000
 - **route_versions**: Version history
 - **route_proposals**: Collaborative proposals
 
-## Development Roadmap
+## Documentation
 
-See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for detailed PoC roadmap.
+- **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - 3-week PoC development roadmap
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide (Vercel + Fly.io + Supabase)
+
+## Tech Stack
+
+**Frontend:**
+- Next.js 14 (App Router) + TypeScript
+- Mapbox GL JS for interactive maps
+- Tailwind CSS for styling
+- Zustand for state management
+
+**Backend:**
+- Rust + Axum web framework
+- SQLx for database queries
+- PostGIS for spatial operations
+
+**Database:**
+- PostgreSQL 15 + PostGIS 3.4
+- Supabase for production hosting
+
+**Deployment:**
+- Vercel (frontend)
+- Fly.io (backend)
+- Supabase (database)
 
 ## License
 

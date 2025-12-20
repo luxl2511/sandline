@@ -5,9 +5,9 @@ mod routes;
 
 use axum::{
     Router,
-    http::{header, Method},
+    http::{header, HeaderValue, Method},
 };
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -24,16 +24,23 @@ async fn main() -> anyhow::Result<()> {
     // Load config
     let config = config::Config::from_env()?;
     tracing::info!("Starting server on {}:{}", config.host, config.port);
+    tracing::info!("Allowed CORS origins: {:?}", config.allowed_origins);
 
     // Initialize database pool
     let pool = db::create_pool(&config.database_url).await?;
     tracing::info!("Database connection established");
 
     // CORS configuration
+    let origins: Vec<HeaderValue> = config.allowed_origins
+        .iter()
+        .filter_map(|origin| origin.parse().ok())
+        .collect();
+
     let cors = CorsLayer::new()
-        .allow_origin(Any)
+        .allow_origin(origins)
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE])
-        .allow_headers([header::CONTENT_TYPE]);
+        .allow_headers([header::CONTENT_TYPE])
+        .allow_credentials(false);
 
     // Build router
     let app = Router::new()
