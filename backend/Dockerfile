@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.75-slim as builder
+FROM rust:slim as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -10,12 +10,13 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy manifests
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 
 # Copy source code
 COPY src ./src
 
-# Build for release
+# Build for release (skip SQLx compile-time verification due to IPv6)
+ENV SQLX_OFFLINE=true
 RUN cargo build --release
 
 # Runtime stage

@@ -9,6 +9,7 @@ pub struct Route {
     pub name: String,
     pub owner_id: Uuid,
     pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

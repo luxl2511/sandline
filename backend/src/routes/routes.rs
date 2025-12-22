@@ -14,7 +14,7 @@ pub async fn list_routes(
     let routes = sqlx::query!(
         r#"
         SELECT
-            r.id, r.name, r.owner_id, r.created_at,
+            r.id, r.name, r.owner_id, r.created_at as "created_at!", r.updated_at as "updated_at!",
             rv.geometry
         FROM routes r
         LEFT JOIN LATERAL (
@@ -43,8 +43,9 @@ pub async fn list_routes(
                 name: row.name,
                 owner_id: row.owner_id,
                 created_at: row.created_at,
+                updated_at: row.updated_at,
             },
-            geometry: row.geometry.unwrap_or(serde_json::json!({"type": "MultiLineString", "coordinates": []})),
+            geometry: row.geometry,
         })
         .collect();
 
@@ -58,7 +59,7 @@ pub async fn get_route(
     let route = sqlx::query!(
         r#"
         SELECT
-            r.id, r.name, r.owner_id, r.created_at,
+            r.id, r.name, r.owner_id, r.created_at as "created_at!", r.updated_at as "updated_at!",
             rv.geometry
         FROM routes r
         LEFT JOIN LATERAL (
@@ -88,8 +89,9 @@ pub async fn get_route(
             name: route.name,
             owner_id: route.owner_id,
             created_at: route.created_at,
+            updated_at: route.updated_at,
         },
-        geometry: route.geometry.unwrap_or(serde_json::json!({"type": "MultiLineString", "coordinates": []})),
+        geometry: route.geometry,
     }))
 }
 
