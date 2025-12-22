@@ -12,6 +12,9 @@ WORKDIR /app
 # Copy manifests
 COPY Cargo.toml Cargo.lock ./
 
+# Copy SQLx query cache for offline builds
+COPY .sqlx ./.sqlx
+
 # Copy source code
 COPY src ./src
 
