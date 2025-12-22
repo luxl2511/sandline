@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            r.id, r.name, r.owner_id, r.created_at as \"created_at!\", r.updated_at as \"updated_at!\",\n            rv.geometry\n        FROM routes r\n        LEFT JOIN LATERAL (\n            SELECT geometry\n            FROM route_versions\n            WHERE route_id = r.id\n            ORDER BY created_at DESC\n            LIMIT 1\n        ) rv ON true\n        WHERE r.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "owner_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "updated_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "geometry",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "45ffbe422189ed6891e734a0a11aa3af6234c8d167cd83d94f1faf10836a2362"
+}
