@@ -12,15 +12,6 @@ pub struct Route {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct RouteVersion {
-    pub id: Uuid,
-    pub route_id: Uuid,
-    #[sqlx(json)]
-    pub geometry: serde_json::Value,
-    pub created_at: DateTime<Utc>,
-}
-
 #[derive(Debug, Deserialize)]
 pub struct CreateRoute {
     pub name: String,
