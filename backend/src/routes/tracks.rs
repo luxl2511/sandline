@@ -15,7 +15,7 @@ pub async fn list_tracks(
     let mut sql = String::from(
         "SELECT id, geometry, source, surface, confidence, last_verified, region
          FROM curated_tracks
-         WHERE 1=1"
+         WHERE 1=1",
     );
 
     if query.source.is_some() {
@@ -48,7 +48,7 @@ pub async fn get_track(
     let track = sqlx::query_as::<_, CuratedTrack>(
         "SELECT id, geometry, source, surface, confidence, last_verified, region
          FROM curated_tracks
-         WHERE id = $1"
+         WHERE id = $1",
     )
     .bind(id)
     .fetch_one(&pool)

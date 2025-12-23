@@ -4,8 +4,8 @@ mod models;
 mod routes;
 
 use axum::{
-    Router,
     http::{header, HeaderValue, Method},
+    Router,
 };
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -31,14 +31,21 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Database connection established");
 
     // CORS configuration
-    let origins: Vec<HeaderValue> = config.allowed_origins
+    let origins: Vec<HeaderValue> = config
+        .allowed_origins
         .iter()
         .filter_map(|origin| origin.parse().ok())
         .collect();
 
     let cors = CorsLayer::new()
         .allow_origin(origins)
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+        ])
         .allow_headers([header::CONTENT_TYPE])
         .allow_credentials(false);
 
@@ -49,8 +56,8 @@ async fn main() -> anyhow::Result<()> {
         .with_state(pool);
 
     // Start server
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port))
-        .await?;
+    let listener =
+        tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port)).await?;
 
     tracing::info!("Server listening on {}", listener.local_addr()?);
     axum::serve(listener, app).await?;

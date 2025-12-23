@@ -1,5 +1,5 @@
-use sqlx::postgres::{PgPool, PgPoolOptions};
 use anyhow::Result;
+use sqlx::postgres::{PgPool, PgPoolOptions};
 
 pub async fn create_pool(database_url: &str) -> Result<PgPool> {
     let pool = PgPoolOptions::new()

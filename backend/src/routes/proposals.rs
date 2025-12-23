@@ -6,7 +6,7 @@ use axum::{
 use uuid::Uuid;
 
 use crate::db::DbPool;
-use crate::models::{CreateProposal, UpdateProposalStatus, RouteProposal};
+use crate::models::{CreateProposal, RouteProposal, UpdateProposalStatus};
 
 pub async fn list_proposals(
     State(pool): State<DbPool>,
