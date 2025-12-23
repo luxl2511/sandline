@@ -45,10 +45,13 @@ async fn main() -> anyhow::Result<()> {
 
                 // Check wildcard patterns (e.g., *.vercel.app)
                 for pattern in &allowed_origins {
-                    if pattern.starts_with("*.") {
-                        let domain = &pattern[2..];
-                        if origin_str.ends_with(domain) {
-                            return true;
+                    if let Some(domain) = pattern.strip_prefix("*.") {
+                        // Must end with the domain AND have a dot before it (ensuring subdomain exists)
+                        if origin_str.ends_with(domain) && origin_str.len() > domain.len() {
+                            let before_domain = &origin_str[..origin_str.len() - domain.len()];
+                            if before_domain.ends_with('.') {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -80,4 +83,97 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    /// Helper function to test CORS origin matching logic
+    fn test_origin_matches(allowed_origins: &[&str], origin: &str) -> bool {
+        let allowed: Vec<String> = allowed_origins.iter().map(|s| s.to_string()).collect();
+
+        // Check exact matches
+        if allowed.contains(&origin.to_string()) {
+            return true;
+        }
+
+        // Check wildcard patterns
+        for pattern in &allowed {
+            if let Some(domain) = pattern.strip_prefix("*.") {
+                // Must end with the domain AND have a dot before it (ensuring subdomain exists)
+                if origin.ends_with(domain) && origin.len() > domain.len() {
+                    let before_domain = &origin[..origin.len() - domain.len()];
+                    if before_domain.ends_with('.') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    #[test]
+    fn test_cors_allows_exact_match() {
+        let allowed = vec!["https://example.com", "https://app.example.com"];
+        assert!(test_origin_matches(&allowed, "https://example.com"));
+        assert!(test_origin_matches(&allowed, "https://app.example.com"));
+    }
+
+    #[test]
+    fn test_cors_blocks_non_matching_origin() {
+        let allowed = vec!["https://example.com"];
+        assert!(!test_origin_matches(&allowed, "https://evil.com"));
+        assert!(!test_origin_matches(
+            &allowed,
+            "https://example.com.evil.com"
+        ));
+    }
+
+    #[test]
+    fn test_cors_allows_wildcard_match() {
+        let allowed = vec!["*.vercel.app"];
+        assert!(test_origin_matches(&allowed, "my-app.vercel.app"));
+        assert!(test_origin_matches(&allowed, "preview-123.vercel.app"));
+        assert!(test_origin_matches(&allowed, "production.vercel.app"));
+    }
+
+    #[test]
+    fn test_cors_wildcard_requires_subdomain() {
+        let allowed = vec!["*.vercel.app"];
+        // Direct domain match should fail (no subdomain)
+        assert!(!test_origin_matches(&allowed, "vercel.app"));
+    }
+
+    #[test]
+    fn test_cors_wildcard_domain_boundary() {
+        let allowed = vec!["*.vercel.app"];
+        // Should not match different TLD
+        assert!(!test_origin_matches(&allowed, "vercel.app.com"));
+        // Should not match if domain is just a prefix
+        assert!(!test_origin_matches(&allowed, "fakevercel.app"));
+    }
+
+    #[test]
+    fn test_cors_multiple_wildcards() {
+        let allowed = vec!["*.vercel.app", "*.netlify.app"];
+        assert!(test_origin_matches(&allowed, "my-app.vercel.app"));
+        assert!(test_origin_matches(&allowed, "my-app.netlify.app"));
+        assert!(!test_origin_matches(&allowed, "my-app.heroku.com"));
+    }
+
+    #[test]
+    fn test_cors_exact_and_wildcard_mixed() {
+        let allowed = vec!["https://example.com", "*.vercel.app"];
+        assert!(test_origin_matches(&allowed, "https://example.com"));
+        assert!(test_origin_matches(&allowed, "my-app.vercel.app"));
+        assert!(!test_origin_matches(&allowed, "https://evil.com"));
+    }
+
+    #[test]
+    fn test_cors_case_sensitive() {
+        let allowed = vec!["https://example.com"];
+        // Origins are case-sensitive
+        assert!(!test_origin_matches(&allowed, "https://Example.com"));
+        assert!(!test_origin_matches(&allowed, "https://EXAMPLE.COM"));
+    }
 }

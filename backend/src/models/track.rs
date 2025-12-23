@@ -16,7 +16,19 @@ pub struct CuratedTrack {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+pub struct CreateTrack {
+    pub geometry: serde_json::Value,
+    pub source: String,
+    pub surface: Option<String>,
+    pub confidence: i32,
+    pub region: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct TrackQuery {
+    #[allow(dead_code)]
+    pub bbox: Option<String>, // "minLon,minLat,maxLon,maxLat"
     pub source: Option<String>,
     pub min_confidence: Option<i32>,
     pub region: Option<String>,
