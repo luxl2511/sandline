@@ -6,7 +6,7 @@ use axum::{
 use uuid::Uuid;
 
 use crate::db::DbPool;
-use crate::models::{CreateRoute, Route, RouteVersion, RouteWithGeometry, UpdateRoute};
+use crate::models::{CreateRoute, Route, RouteWithGeometry, UpdateRoute};
 
 pub async fn list_routes(
     State(pool): State<DbPool>,
