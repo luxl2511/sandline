@@ -30,15 +30,32 @@ async fn main() -> anyhow::Result<()> {
     let pool = db::create_pool(&config.database_url).await?;
     tracing::info!("Database connection established");
 
-    // CORS configuration
-    let origins: Vec<HeaderValue> = config
-        .allowed_origins
-        .iter()
-        .filter_map(|origin| origin.parse().ok())
-        .collect();
+    // CORS configuration with wildcard support
+    let allowed_origins = config.allowed_origins.clone();
 
     let cors = CorsLayer::new()
-        .allow_origin(origins)
+        .allow_origin(tower_http::cors::AllowOrigin::predicate(
+            move |origin: &HeaderValue, _request_parts| {
+                let origin_str = origin.to_str().unwrap_or("");
+
+                // Check exact matches
+                if allowed_origins.contains(&origin_str.to_string()) {
+                    return true;
+                }
+
+                // Check wildcard patterns (e.g., *.vercel.app)
+                for pattern in &allowed_origins {
+                    if pattern.starts_with("*.") {
+                        let domain = &pattern[2..];
+                        if origin_str.ends_with(domain) {
+                            return true;
+                        }
+                    }
+                }
+
+                false
+            },
+        ))
         .allow_methods([
             Method::GET,
             Method::POST,

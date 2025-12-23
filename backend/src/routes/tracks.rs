@@ -13,7 +13,7 @@ pub async fn list_tracks(
     Query(query): Query<TrackQuery>,
 ) -> Result<Json<Vec<CuratedTrack>>, StatusCode> {
     let mut sql = String::from(
-        "SELECT id, geometry, source, surface, confidence, last_verified, region
+        "SELECT id, ST_AsGeoJSON(geometry)::jsonb as geometry, source, surface, confidence, last_verified, region
          FROM curated_tracks
          WHERE 1=1",
     );
@@ -31,6 +31,7 @@ pub async fn list_tracks(
     sql.push_str(" LIMIT 1000");
 
     let tracks = sqlx::query_as::<_, CuratedTrack>(&sql)
+        .persistent(false)
         .fetch_all(&pool)
         .await
         .map_err(|e| {
@@ -46,11 +47,12 @@ pub async fn get_track(
     Path(id): Path<Uuid>,
 ) -> Result<Json<CuratedTrack>, StatusCode> {
     let track = sqlx::query_as::<_, CuratedTrack>(
-        "SELECT id, geometry, source, surface, confidence, last_verified, region
+        "SELECT id, ST_AsGeoJSON(geometry)::jsonb as geometry, source, surface, confidence, last_verified, region
          FROM curated_tracks
          WHERE id = $1",
     )
     .bind(id)
+    .persistent(false)
     .fetch_one(&pool)
     .await
     .map_err(|e| match e {
