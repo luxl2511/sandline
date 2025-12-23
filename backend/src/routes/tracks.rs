@@ -13,7 +13,7 @@ pub async fn list_tracks(
     Query(query): Query<TrackQuery>,
 ) -> Result<Json<Vec<CuratedTrack>>, StatusCode> {
     let mut sql = String::from(
-        "SELECT id, geometry, source, surface, confidence, last_verified, region
+        "SELECT id, ST_AsGeoJSON(geometry)::jsonb as geometry, source, surface, confidence, last_verified, region
          FROM curated_tracks
          WHERE 1=1",
     );
@@ -46,7 +46,7 @@ pub async fn get_track(
     Path(id): Path<Uuid>,
 ) -> Result<Json<CuratedTrack>, StatusCode> {
     let track = sqlx::query_as::<_, CuratedTrack>(
-        "SELECT id, geometry, source, surface, confidence, last_verified, region
+        "SELECT id, ST_AsGeoJSON(geometry)::jsonb as geometry, source, surface, confidence, last_verified, region
          FROM curated_tracks
          WHERE id = $1",
     )
