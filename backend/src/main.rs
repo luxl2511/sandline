@@ -87,8 +87,6 @@ async fn main() -> anyhow::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     /// Helper function to test CORS origin matching logic
     fn test_origin_matches(allowed_origins: &[&str], origin: &str) -> bool {
         let allowed: Vec<String> = allowed_origins.iter().map(|s| s.to_string()).collect();

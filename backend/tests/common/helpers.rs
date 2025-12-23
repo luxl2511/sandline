@@ -97,25 +97,9 @@ pub fn parse_json_response<T: DeserializeOwned>(body: &[u8]) -> T {
     serde_json::from_slice(body).expect("Failed to parse JSON response")
 }
 
-/// Assert that a JSON response matches an expected value
-pub fn assert_json_eq<T: DeserializeOwned + std::fmt::Debug + PartialEq>(body: &[u8], expected: T) {
-    let actual: T = parse_json_response(body);
-    assert_eq!(actual, expected);
-}
-
 /// Assert that response status is OK (200)
 pub fn assert_status_ok(status: StatusCode) {
     assert_eq!(status, StatusCode::OK, "Expected 200 OK, got {}", status);
-}
-
-/// Assert that response status is Created (201)
-pub fn assert_status_created(status: StatusCode) {
-    assert_eq!(
-        status,
-        StatusCode::CREATED,
-        "Expected 201 Created, got {}",
-        status
-    );
 }
 
 /// Assert that response status is Not Found (404)

@@ -29,14 +29,6 @@ pub fn create_complex_geometry() -> serde_json::Value {
     })
 }
 
-/// Create an invalid geometry for error testing
-pub fn create_invalid_geometry() -> serde_json::Value {
-    json!({
-        "type": "InvalidType",
-        "coordinates": "not an array"
-    })
-}
-
 /// Insert a sample curated track into the database
 pub async fn insert_sample_track(
     pool: &PgPool,
@@ -73,8 +65,8 @@ pub async fn insert_sample_tracks(pool: &PgPool) -> Vec<Uuid> {
     vec![
         insert_sample_track(pool, "rally", Some("sand"), 5, Some("Western Sahara")).await,
         insert_sample_track(pool, "rally", Some("gravel"), 4, Some("Morocco")).await,
-        insert_sample_track(pool, "community", Some("sand"), 3, Some("Western Sahara")).await,
-        insert_sample_track(pool, "satellite", None, 2, Some("Mauritania")).await,
+        insert_sample_track(pool, "curated", Some("sand"), 3, Some("Western Sahara")).await,
+        insert_sample_track(pool, "osm", None, 2, Some("Mauritania")).await,
         insert_sample_track(pool, "rally", Some("rock"), 5, None).await,
     ]
 }
