@@ -31,6 +31,7 @@ pub async fn list_tracks(
     sql.push_str(" LIMIT 1000");
 
     let tracks = sqlx::query_as::<_, CuratedTrack>(&sql)
+        .persistent(false)
         .fetch_all(&pool)
         .await
         .map_err(|e| {
@@ -51,6 +52,7 @@ pub async fn get_track(
          WHERE id = $1",
     )
     .bind(id)
+    .persistent(false)
     .fetch_one(&pool)
     .await
     .map_err(|e| match e {
