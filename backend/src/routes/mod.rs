@@ -1,10 +1,10 @@
 pub mod proposals;
-pub mod routes;
+pub mod route_handlers;
 pub mod tracks;
 
 use crate::db::DbPool;
 use axum::{
-    routing::{get, patch, post, put},
+    routing::{get, patch, post},
     Router,
 };
 
@@ -16,11 +16,11 @@ pub fn api_routes() -> Router<DbPool> {
         // Routes
         .route(
             "/routes",
-            get(routes::list_routes).post(routes::create_route),
+            get(route_handlers::list_routes).post(route_handlers::create_route),
         )
         .route(
             "/routes/:id",
-            get(routes::get_route).put(routes::update_route),
+            get(route_handlers::get_route).put(route_handlers::update_route),
         )
         .route("/routes/:id/proposals", get(proposals::list_proposals))
         // Proposals
