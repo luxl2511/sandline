@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { supabase } from './supabase'
-import type { CuratedTrack, Route, RouteProposal } from '@/types'
+import type { CuratedTrack, Route, RouteProposal, EditingSession, PointChange } from '@/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -83,5 +83,63 @@ export async function updateProposalStatus(
   status: 'accepted' | 'rejected'
 ): Promise<RouteProposal> {
   const response = await api.patch(`/api/proposals/${id}`, { status })
+  return response.data
+}
+
+// Collaborative Editing Sessions
+export async function joinEditingSession(
+  routeId: string,
+  data: {
+    userEmail: string
+    userAvatarUrl?: string
+  }
+): Promise<{
+  sessionId: string
+  routeId: string
+  userId: string
+  startedAt: string
+  activeSessions: EditingSession[]
+}> {
+  const response = await api.post(`/api/routes/${routeId}/editing-session`, data)
+  return response.data
+}
+
+export async function leaveEditingSession(routeId: string): Promise<void> {
+  await api.delete(`/api/routes/${routeId}/editing-session`)
+}
+
+export async function sendHeartbeat(routeId: string): Promise<void> {
+  await api.post(`/api/routes/${routeId}/editing-session/heartbeat`)
+}
+
+// Point Changes
+export async function createPointChange(
+  routeId: string,
+  data: {
+    featureIndex: number
+    pointIndex: number
+    originalPosition: [number, number]
+    newPosition: [number, number]
+  }
+): Promise<PointChange> {
+  const response = await api.post(`/api/routes/${routeId}/point-changes`, data)
+  return response.data
+}
+
+export async function fetchPointChanges(
+  routeId: string,
+  status: 'pending' | 'accepted' | 'rejected' = 'pending'
+): Promise<PointChange[]> {
+  const response = await api.get(`/api/routes/${routeId}/point-changes`, {
+    params: { status },
+  })
+  return response.data
+}
+
+export async function updatePointChangeStatus(
+  changeId: string,
+  status: 'accepted' | 'rejected'
+): Promise<PointChange> {
+  const response = await api.patch(`/api/point-changes/${changeId}`, { status })
   return response.data
 }

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE route_editing_sessions SET last_heartbeat = NOW() WHERE route_id = $1 AND user_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8a9fb9e26892c5383d3949a49cc6e310549d826c41b64e582f609ea41aeb1598"
+}

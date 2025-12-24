@@ -32,6 +32,29 @@ export interface RouteProposal {
   createdAt: string
 }
 
+export interface EditingSession {
+  userId: string
+  userEmail: string
+  userAvatarUrl?: string
+  startedAt: string
+}
+
+export interface PointChange {
+  id: string
+  routeId: string
+  userId: string
+  userEmail: string
+  featureIndex: number
+  pointIndex: number
+  originalPosition: [number, number]
+  newPosition: [number, number]
+  status: 'pending' | 'accepted' | 'rejected'
+  createdAt: string
+  updatedAt: string
+  resolvedAt?: string
+  resolvedBy?: string
+}
+
 export interface LayerState {
   osmTracks: boolean
   curatedTracks: boolean
@@ -45,10 +68,28 @@ export interface MapStore {
   proposals: RouteProposal[]
   isDrawing: boolean
   drawnGeometry: GeoJSON.Feature[] | null
+
+  // Collaborative editing state
+  isEditingRoute: boolean
+  editingRouteId: string | null
+  editingSession: EditingSession | null
+  activeSessions: EditingSession[]
+  pendingPointChanges: PointChange[]
+
   toggleLayer: (layer: keyof LayerState) => void
   setSelectedRoute: (route: Route | null) => void
   setProposals: (proposals: RouteProposal[]) => void
   startDrawing: () => void
   stopDrawing: () => void
   setDrawnGeometry: (geometry: GeoJSON.Feature[] | null) => void
+
+  // Collaborative editing actions
+  startEditingRoute: (routeId: string) => void
+  stopEditingRoute: () => void
+  setEditingSession: (session: EditingSession | null) => void
+  setActiveSessions: (sessions: EditingSession[]) => void
+  addPointChange: (change: PointChange) => void
+  updatePointChange: (changeId: string, status: 'accepted' | 'rejected') => void
+  removePointChange: (changeId: string) => void
+  setPendingPointChanges: (changes: PointChange[]) => void
 }

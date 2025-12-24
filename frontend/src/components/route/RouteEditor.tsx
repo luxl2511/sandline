@@ -6,9 +6,20 @@ import { useAuth } from '@/contexts/AuthContext'
 import ProposalList from './ProposalList'
 import RouteCreationDialog from './RouteCreationDialog'
 import AuthModal from '../auth/AuthModal'
+import PresenceIndicators from './PresenceIndicators'
 
 export default function RouteEditor() {
-  const { selectedRoute, setSelectedRoute, isDrawing, startDrawing, drawnGeometry } = useMapStore()
+  const {
+    selectedRoute,
+    setSelectedRoute,
+    isDrawing,
+    isEditingRoute,
+    startDrawing,
+    startEditingRoute,
+    stopEditingRoute,
+    drawnGeometry,
+    activeSessions,
+  } = useMapStore()
   const { user } = useAuth()
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -27,6 +38,23 @@ export default function RouteEditor() {
       return
     }
     startDrawing()
+  }
+
+  const handleEditRoute = () => {
+    // Require authentication to edit routes
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+
+    if (!selectedRoute) return
+
+    // Start collaborative editing mode
+    startEditingRoute(selectedRoute.id)
+  }
+
+  const handleStopEditing = () => {
+    stopEditingRoute()
   }
 
   return (
@@ -66,20 +94,45 @@ export default function RouteEditor() {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <button className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm">
-                Edit Route
-              </button>
-              <button className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
-                Create Proposal
-              </button>
-              <button
-                onClick={() => setSelectedRoute(null)}
-                className="w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-              >
-                Close
-              </button>
-            </div>
+            {isEditingRoute ? (
+              <>
+                {/* Show presence indicators when editing */}
+                <PresenceIndicators sessions={activeSessions} />
+
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-3">
+                  <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-2">
+                    Editing Mode
+                  </p>
+                  <p className="text-xs text-green-700 dark:text-green-300 mb-3">
+                    Click and drag route points to suggest changes. Other collaborators will see your suggestions.
+                  </p>
+                  <button
+                    onClick={handleStopEditing}
+                    className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+                  >
+                    Stop Editing
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2">
+                <button
+                  onClick={handleEditRoute}
+                  className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+                >
+                  Edit Route
+                </button>
+                <button className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
+                  Create Proposal
+                </button>
+                <button
+                  onClick={() => setSelectedRoute(null)}
+                  className="w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            )}
 
             <ProposalList routeId={selectedRoute.id} />
           </div>

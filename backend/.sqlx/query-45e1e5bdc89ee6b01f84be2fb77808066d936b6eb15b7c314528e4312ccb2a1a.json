@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT user_id, user_email, user_avatar_url, started_at\n        FROM route_editing_sessions\n        WHERE route_id = $1 AND user_id != $2\n        ORDER BY started_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_avatar_url",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "started_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "45e1e5bdc89ee6b01f84be2fb77808066d936b6eb15b7c314528e4312ccb2a1a"
+}
