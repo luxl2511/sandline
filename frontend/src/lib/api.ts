@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { supabase } from './supabase'
 import type { CuratedTrack, Route, RouteProposal } from '@/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
@@ -8,6 +9,17 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+})
+
+// Add auth interceptor to attach JWT token to all requests
+api.interceptors.request.use(async (config) => {
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (session?.access_token) {
+    config.headers.Authorization = `Bearer ${session.access_token}`
+  }
+
+  return config
 })
 
 // Tracks

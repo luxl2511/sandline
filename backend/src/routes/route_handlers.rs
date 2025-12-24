@@ -6,6 +6,7 @@ use axum::{
 use uuid::Uuid;
 
 use crate::db::DbPool;
+use crate::middleware::AuthUser;
 use crate::models::{CreateRoute, Route, RouteWithGeometry, UpdateRoute};
 
 pub async fn list_routes(
@@ -96,11 +97,15 @@ pub async fn get_route(
 }
 
 pub async fn create_route(
+    auth_user: AuthUser,
     State(pool): State<DbPool>,
     Json(payload): Json<CreateRoute>,
 ) -> Result<Json<RouteWithGeometry>, StatusCode> {
-    // TODO: Get actual user ID from auth
-    let owner_id = Uuid::new_v4();
+    // Use authenticated user ID as owner
+    let owner_id = Uuid::parse_str(&auth_user.id).map_err(|e| {
+        tracing::error!("Failed to parse user ID: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     let mut tx = pool.begin().await.map_err(|e| {
         tracing::error!("Failed to start transaction: {}", e);
@@ -144,10 +149,16 @@ pub async fn create_route(
 }
 
 pub async fn update_route(
+    auth_user: AuthUser,
     State(pool): State<DbPool>,
     Path(id): Path<Uuid>,
     Json(payload): Json<UpdateRoute>,
 ) -> Result<Json<RouteWithGeometry>, StatusCode> {
+    let owner_id = Uuid::parse_str(&auth_user.id).map_err(|e| {
+        tracing::error!("Failed to parse user ID: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
     let route = sqlx::query_as!(Route, "SELECT * FROM routes WHERE id = $1", id)
         .fetch_one(&pool)
         .await
@@ -158,6 +169,17 @@ pub async fn update_route(
                 StatusCode::INTERNAL_SERVER_ERROR
             }
         })?;
+
+    // Verify ownership
+    if route.owner_id != owner_id {
+        tracing::warn!(
+            "User {} attempted to update route {} owned by {}",
+            owner_id,
+            route.id,
+            route.owner_id
+        );
+        return Err(StatusCode::FORBIDDEN);
+    }
 
     sqlx::query!(
         "INSERT INTO route_versions (route_id, geometry) VALUES ($1, $2)",

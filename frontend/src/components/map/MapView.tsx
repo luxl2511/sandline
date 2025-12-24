@@ -1,15 +1,35 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
-import Map, { MapRef, Layer, Source } from 'react-map-gl'
+import { useRef, useCallback } from 'react'
+import Map, { MapRef } from 'react-map-gl'
 import { useMapStore } from '@/lib/store'
 import TrackRenderer from './TrackRenderer'
+import useMapboxDraw from '@/hooks/useMapboxDraw'
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ''
 
 export default function MapView() {
   const mapRef = useRef<MapRef>(null)
-  const { layers } = useMapStore()
+  const { layers, isDrawing, setDrawnGeometry } = useMapStore()
+
+  const handleDrawCreate = useCallback((features: GeoJSON.Feature[]) => {
+    setDrawnGeometry(features)
+  }, [setDrawnGeometry])
+
+  const handleDrawUpdate = useCallback((features: GeoJSON.Feature[]) => {
+    setDrawnGeometry(features)
+  }, [setDrawnGeometry])
+
+  const handleDrawDelete = useCallback(() => {
+    setDrawnGeometry(null)
+  }, [setDrawnGeometry])
+
+  useMapboxDraw(mapRef, {
+    enabled: isDrawing,
+    onDrawCreate: handleDrawCreate,
+    onDrawUpdate: handleDrawUpdate,
+    onDrawDelete: handleDrawDelete,
+  })
 
   return (
     <Map

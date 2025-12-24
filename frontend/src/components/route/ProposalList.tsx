@@ -1,21 +1,17 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useMapStore } from '@/lib/store'
-import { fetchProposals } from '@/lib/api'
+import useRealtimeProposals from '@/hooks/useRealtimeProposals'
 
 interface ProposalListProps {
   routeId: string
 }
 
 export default function ProposalList({ routeId }: ProposalListProps) {
-  const { proposals, setProposals } = useMapStore()
+  const proposals = useMapStore((state) => state.proposals)
 
-  useEffect(() => {
-    fetchProposals(routeId)
-      .then(setProposals)
-      .catch(console.error)
-  }, [routeId, setProposals])
+  // Subscribe to realtime updates for this route's proposals
+  useRealtimeProposals(routeId)
 
   if (proposals.length === 0) {
     return (

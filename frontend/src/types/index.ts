@@ -43,7 +43,12 @@ export interface MapStore {
   layers: LayerState
   selectedRoute: Route | null
   proposals: RouteProposal[]
+  isDrawing: boolean
+  drawnGeometry: GeoJSON.Feature[] | null
   toggleLayer: (layer: keyof LayerState) => void
   setSelectedRoute: (route: Route | null) => void
   setProposals: (proposals: RouteProposal[]) => void
+  startDrawing: () => void
+  stopDrawing: () => void
+  setDrawnGeometry: (geometry: GeoJSON.Feature[] | null) => void
 }

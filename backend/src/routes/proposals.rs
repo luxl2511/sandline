@@ -6,6 +6,7 @@ use axum::{
 use uuid::Uuid;
 
 use crate::db::DbPool;
+use crate::middleware::AuthUser;
 use crate::models::{CreateProposal, RouteProposal, UpdateProposalStatus};
 
 pub async fn list_proposals(
@@ -28,11 +29,15 @@ pub async fn list_proposals(
 }
 
 pub async fn create_proposal(
+    auth_user: AuthUser,
     State(pool): State<DbPool>,
     Json(payload): Json<CreateProposal>,
 ) -> Result<Json<RouteProposal>, StatusCode> {
-    // TODO: Get actual user ID from auth
-    let created_by = Uuid::new_v4();
+    // Use authenticated user ID as creator
+    let created_by = Uuid::parse_str(&auth_user.id).map_err(|e| {
+        tracing::error!("Failed to parse user ID: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
     let proposal = sqlx::query_as!(
         RouteProposal,

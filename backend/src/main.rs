@@ -1,5 +1,6 @@
 mod config;
 mod db;
+mod middleware;
 mod models;
 mod routes;
 
@@ -45,8 +46,7 @@ async fn main() -> anyhow::Result<()> {
 
                 // Check wildcard patterns (e.g., *.vercel.app)
                 for pattern in &allowed_origins {
-                    if pattern.starts_with("*.") {
-                        let domain = &pattern[2..];
+                    if let Some(domain) = pattern.strip_prefix("*.") {
                         if origin_str.ends_with(domain) {
                             return true;
                         }
@@ -63,7 +63,7 @@ async fn main() -> anyhow::Result<()> {
             Method::PATCH,
             Method::DELETE,
         ])
-        .allow_headers([header::CONTENT_TYPE])
+        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
         .allow_credentials(false);
 
     // Build router
