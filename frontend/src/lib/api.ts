@@ -1,6 +1,7 @@
 import axios from 'axios'
 import axiosRetry from 'axios-retry'
 import type { CuratedTrack, Route, RouteProposal, EditingSession, PointChange } from '@/types'
+import { logger } from './logger'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -79,13 +80,13 @@ api.interceptors.response.use(
     const status = error.response?.status
     const message = error.response?.data?.message || error.message
 
-    // Log for debugging
-    console.error('[API Error]', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status,
-      message,
-    })
+    // Log using structured logger
+    logger.apiError(
+      error.config?.url || 'unknown',
+      error.config?.method || 'unknown',
+      status || 0,
+      message
+    )
 
     // Don't throw on client - let calling code handle it
     // This allows per-request error handling while logging all errors
@@ -123,7 +124,11 @@ export async function createRoute(data: {
   geometry: GeoJSON.MultiLineString
   controlPoints: GeoJSON.Point[]
 }): Promise<Route> {
-  const response = await api.post('/api/routes', data)
+  const response = await api.post('/api/routes', {
+    name: data.name,
+    geometry: data.geometry,
+    control_points: data.controlPoints,
+  })
   return response.data
 }
 

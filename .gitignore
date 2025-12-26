@@ -44,3 +44,4 @@ pg_data/
 tmp/
 temp/
 .vercel
+.env*.local

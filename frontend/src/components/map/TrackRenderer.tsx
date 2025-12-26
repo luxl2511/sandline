@@ -16,17 +16,6 @@ export default function TrackRenderer() {
     }
   }, [layers.osmTracks, layers.curatedTracks])
 
-  const getTrackColor = (confidence: number): string => {
-    const colors = {
-      5: '#22c55e',
-      4: '#84cc16',
-      3: '#eab308',
-      2: '#f97316',
-      1: '#ef4444',
-    }
-    return colors[confidence as keyof typeof colors] || '#6b7280'
-  }
-
   const geojson: GeoJSON.FeatureCollection = {
     type: 'FeatureCollection',
     features: tracks.map(track => ({
@@ -49,7 +38,16 @@ export default function TrackRenderer() {
         id="tracks-layer"
         type="line"
         paint={{
-          'line-color': ['get', 'confidence'],
+          'line-color': [
+            'match',
+            ['get', 'confidence'],
+            5, '#22c55e',  // High confidence - green
+            4, '#84cc16',  // Good confidence - lime
+            3, '#eab308',  // Medium confidence - yellow
+            2, '#f97316',  // Low confidence - orange
+            1, '#ef4444',  // Very low confidence - red
+            '#6b7280'      // Default - gray
+          ],
           'line-width': 2,
           'line-opacity': 0.8,
         }}

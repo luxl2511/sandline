@@ -75,9 +75,10 @@ export default function MapView({ routes }: MapViewProps) {
 
     // Check if a route was clicked
     const routeFeature = features.find(f => f.layer?.id === 'routes-layer')
-    if (routeFeature && routeFeature.properties && routeFeature.geometry) {
+    if (routeFeature && routeFeature.properties) {
       const clickedRouteId = routeFeature.properties.id
-      const clickedCoords = (routeFeature.geometry as any).coordinates[0][0] // Get first point of first segment as an approximation
+      // Use the actual click coordinates from the event
+      const clickedCoords: [number, number] = [e.lngLat.lng, e.lngLat.lat]
       handleRouteClick(clickedRouteId, clickedCoords)
       return
     }
