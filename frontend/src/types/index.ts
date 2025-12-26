@@ -12,8 +12,11 @@ export interface Route {
   id: string;
   name: string;
   owner_id: string;
-  geometry: GeoJSON.MultiLineString | null;
-  control_points: GeoJSON.Point[] | null;
+  geometry: GeoJSON.MultiLineString;
+  control_points: GeoJSON.Point[];
+  length_km?: number;
+  estimated_time_min?: number;
+  created_by?: string;
   created_at: string;
 }
 

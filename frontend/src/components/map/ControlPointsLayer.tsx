@@ -132,12 +132,12 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
   return (
     <>
       {routes.map(route =>
-        route.control_points?.map((point, index) => {
+        route.control_points.map((point, index) => {
           const key = `${route.id}-${index}`
           const activeDrag = activeDrags.get(key)
           const isBeingDraggedByMe = activeDrag?.user_id === user?.id
           const isBeingDraggedByOther = activeDrag && activeDrag.user_id !== user?.id
-          const isStartOrEnd = index === 0 || index === (route.control_points?.length || 0) - 1
+          const isStartOrEnd = index === 0 || index === route.control_points.length - 1
 
           return (
             <Marker
@@ -154,7 +154,7 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
                 user_email={activeDrag?.user_email || null}
                 isMine={isBeingDraggedByMe}
                 onDelete={() => onDelete(route.id, index)}
-                type={index === 0 ? 'start' : index === (route.control_points?.length || 0) - 1 ? 'end' : 'intermediate'}
+                type={index === 0 ? 'start' : index === route.control_points.length - 1 ? 'end' : 'intermediate'}
               />
             </Marker>
           )

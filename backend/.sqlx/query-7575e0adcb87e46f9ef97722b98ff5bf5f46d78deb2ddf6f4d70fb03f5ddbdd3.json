@@ -20,18 +20,18 @@
       },
       {
         "ordinal": 3,
+        "name": "control_points",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
-      },
-      {
-        "ordinal": 5,
-        "name": "control_points",
-        "type_info": "Jsonb"
       }
     ],
     "parameters": {
@@ -47,7 +47,7 @@
       false,
       false,
       false,
-      true
+      false
     ]
   },
   "hash": "7575e0adcb87e46f9ef97722b98ff5bf5f46d78deb2ddf6f4d70fb03f5ddbdd3"

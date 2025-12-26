@@ -4,6 +4,7 @@ use axum::{
     Json,
 };
 use serde::Deserialize;
+use serde_json::Value;
 use uuid::Uuid;
 
 use crate::db::RlsTransaction;
@@ -384,7 +385,7 @@ pub async fn update_point_change_status(
         // Apply the point change
         let coords = geometry["coordinates"]
             .get_mut(change.feature_index as usize)
-            .and_then(|f| f.get_mut(change.point_index as usize))
+            .and_then(|f: &mut Value| f.get_mut(change.point_index as usize))
             .ok_or_else(|| {
                 tracing::error!("Invalid feature/point index in change");
                 StatusCode::BAD_REQUEST
@@ -395,9 +396,10 @@ pub async fn update_point_change_status(
         // Create new route version
         // RLS policy "Owner create route versions" ensures only owner can create versions
         sqlx::query!(
-            "INSERT INTO route_versions (route_id, geometry) VALUES ($1, $2)",
+            "INSERT INTO route_versions (route_id, geometry, created_by) VALUES ($1, $2, $3)",
             change.route_id,
-            geometry
+            geometry,
+            user_id
         )
         .execute(&mut **tx)
         .await
@@ -447,18 +449,17 @@ pub async fn update_point_change_status(
         })?;
 
         // Update control points with new position
-        if let Some(mut control_points_value) = route.control_points {
-            if let Some(control_points) = control_points_value.as_array_mut() {
-                if let Some(point) = control_points.get_mut(change.point_index as usize) {
-                    // Update the point with new position
-                    // Convert [lng, lat] array to {lng, lat} object format
-                    if let Some(coords) = change.new_position.as_array() {
-                        if coords.len() == 2 {
-                            *point = serde_json::json!({
-                                "lng": coords[0],
-                                "lat": coords[1]
-                            });
-                        }
+        let mut control_points_value = route.control_points;
+        if let Some(control_points) = control_points_value.as_array_mut() {
+            if let Some(point) = control_points.get_mut(change.point_index as usize) {
+                // Update the point with new position
+                // Convert [lng, lat] array to {lng, lat} object format
+                if let Some(coords) = change.new_position.as_array() {
+                    if coords.len() == 2 {
+                        *point = serde_json::json!({
+                            "lng": coords[0],
+                            "lat": coords[1]
+                        });
                     }
                 }
             }

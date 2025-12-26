@@ -57,10 +57,10 @@ pub async fn list_routes(
         r#"
         SELECT
             r.id, r.name, r.owner_id, r.control_points, r.created_at as "created_at!", r.updated_at as "updated_at!",
-            rv.geometry
+            rv.geometry, rv.length_km, rv.estimated_time_min, rv.created_by
         FROM routes r
         LEFT JOIN LATERAL (
-            SELECT geometry
+            SELECT geometry, length_km, estimated_time_min, created_by
             FROM route_versions
             WHERE route_id = r.id
             ORDER BY created_at DESC
@@ -84,12 +84,14 @@ pub async fn list_routes(
                 id: row.id,
                 name: row.name,
                 owner_id: row.owner_id,
-                control_points: row.control_points.clone(),
+                control_points: row.control_points,
                 created_at: row.created_at,
                 updated_at: row.updated_at,
             },
             geometry: row.geometry,
-            control_points: row.control_points,
+            length_km: row.length_km,
+            estimated_time_min: row.estimated_time_min,
+            created_by: row.created_by,
         })
         .collect();
 
@@ -107,10 +109,10 @@ pub async fn get_route(
         r#"
         SELECT
             r.id, r.name, r.owner_id, r.control_points, r.created_at as "created_at!", r.updated_at as "updated_at!",
-            rv.geometry
+            rv.geometry, rv.length_km, rv.estimated_time_min, rv.created_by
         FROM routes r
         LEFT JOIN LATERAL (
-            SELECT geometry
+            SELECT geometry, length_km, estimated_time_min, created_by
             FROM route_versions
             WHERE route_id = r.id
             ORDER BY created_at DESC
@@ -135,12 +137,14 @@ pub async fn get_route(
             id: route.id,
             name: route.name,
             owner_id: route.owner_id,
-            control_points: route.control_points.clone(),
+            control_points: route.control_points,
             created_at: route.created_at,
             updated_at: route.updated_at,
         },
         geometry: route.geometry,
-        control_points: route.control_points,
+        length_km: route.length_km,
+        estimated_time_min: route.estimated_time_min,
+        created_by: route.created_by,
     }))
 }
 
@@ -188,9 +192,10 @@ pub async fn create_route(
 
     // STEP 2: Store PROCESSED geometry (not raw payload)
     sqlx::query!(
-        "INSERT INTO route_versions (route_id, geometry) VALUES ($1, $2)",
+        "INSERT INTO route_versions (route_id, geometry, created_by) VALUES ($1, $2, $3)",
         route.id,
-        processed_geometry
+        processed_geometry,
+        owner_id
     )
     .execute(&mut **tx)
     .await
@@ -208,7 +213,9 @@ pub async fn create_route(
     Ok(Json(RouteWithGeometry {
         route,
         geometry: processed_geometry,
-        control_points: Some(payload.control_points),
+        length_km: None,
+        estimated_time_min: None,
+        created_by: Some(owner_id),
     }))
 }
 
@@ -226,6 +233,12 @@ pub async fn update_route(
     Path(id): Path<Uuid>,
     Json(payload): Json<UpdateRoute>,
 ) -> Result<Json<RouteWithGeometry>, StatusCode> {
+    // Parse user ID from authenticated user
+    let auth_user_uuid = Uuid::parse_str(&auth_user.id).map_err(|e| {
+        tracing::error!("Failed to parse user ID: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
     // STEP 1: Process geometry (route + simplify)
     tracing::info!("Processing geometry for route update (route_id: {})", id);
     let processed_geometry = process_geometry(&state.pool, &payload.geometry).await?;
@@ -244,9 +257,10 @@ pub async fn update_route(
     //
     // If user doesn't own the route, INSERT will fail with permission denied error
     sqlx::query!(
-        "INSERT INTO route_versions (route_id, geometry) VALUES ($1, $2)",
+        "INSERT INTO route_versions (route_id, geometry, created_by) VALUES ($1, $2, $3)",
         id,
-        processed_geometry // <-- Routed + simplified geometry
+        processed_geometry, // <-- Routed + simplified geometry
+        auth_user_uuid
     )
     .execute(&mut **tx)
     .await
@@ -305,12 +319,14 @@ pub async fn update_route(
             id: route.id,
             name: route.name,
             owner_id: route.owner_id,
-            control_points: route.control_points.clone(),
+            control_points: route.control_points,
             created_at: route.created_at,
             updated_at: route.updated_at,
         },
         geometry: processed_geometry, // <-- Return processed geometry
-        control_points: route.control_points,
+        length_km: None,
+        estimated_time_min: None,
+        created_by: Some(auth_user_uuid),
     }))
 }
 
@@ -407,9 +423,10 @@ pub async fn update_route_control_points(
 
         // STEP 2: Store PROCESSED geometry version
         sqlx::query!(
-            "INSERT INTO route_versions (route_id, geometry) VALUES ($1, $2)",
+            "INSERT INTO route_versions (route_id, geometry, created_by) VALUES ($1, $2, $3)",
             id,
-            processed_geometry
+            processed_geometry,
+            auth_user_uuid
         )
         .execute(&mut **tx)
         .await
@@ -440,9 +457,18 @@ pub async fn update_route_control_points(
         })?;
 
         Ok(Json(RouteWithGeometry {
-            route: existing_route,
+            route: Route {
+                id: existing_route.id,
+                name: existing_route.name,
+                owner_id: existing_route.owner_id,
+                control_points: payload.control_points,
+                created_at: existing_route.created_at,
+                updated_at: existing_route.updated_at,
+            },
             geometry: processed_geometry,
-            control_points: Some(payload.control_points),
+            length_km: None,
+            estimated_time_min: None,
+            created_by: Some(auth_user_uuid),
         }))
     } else {
         // User does NOT own the route, create a proposal
@@ -454,16 +480,12 @@ pub async fn update_route_control_points(
             existing_route.owner_id
         );
 
-        let original_control_points = existing_route
-            .control_points
-            .clone()
-            .ok_or(StatusCode::BAD_REQUEST)?;
-
         // Handle both {lng, lat} and {coordinates: [lng, lat]} formats
-        let original_position = original_control_points
+        let original_position = existing_route
+            .control_points
             .as_array()
-            .and_then(|arr| arr.get(payload.point_index as usize))
-            .and_then(|p| {
+            .and_then(|arr: &Vec<Value>| arr.get(payload.point_index as usize))
+            .and_then(|p: &Value| {
                 // Handle both formats
                 if let Some(coords) = p.get("coordinates") {
                     Some(coords.clone())
@@ -478,8 +500,8 @@ pub async fn update_route_control_points(
         let new_position = payload
             .control_points
             .as_array()
-            .and_then(|arr| arr.get(payload.point_index as usize))
-            .and_then(|p| {
+            .and_then(|arr: &Vec<Value>| arr.get(payload.point_index as usize))
+            .and_then(|p: &Value| {
                 // Handle both formats
                 if let Some(coords) = p.get("coordinates") {
                     Some(coords.clone())
@@ -539,11 +561,12 @@ pub async fn update_route_control_points(
         .ok_or(StatusCode::NOT_FOUND)?; // Should always have geometry if route exists
 
         // Return the original route, indicating a proposal was created
-        let control_points_clone = existing_route.control_points.clone();
         Ok(Json(RouteWithGeometry {
             route: existing_route,
             geometry: original_processed_geometry,
-            control_points: control_points_clone,
+            length_km: None,
+            estimated_time_min: None,
+            created_by: None, // We don't have this for the original geometry easily here
         }))
     }
 }

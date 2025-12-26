@@ -73,7 +73,10 @@ export default function MapView({ routes }: MapViewProps) {
     const features = e.features || []
 
     // Check if a route was clicked
-    const routeFeature = features.find(f => f.layer?.id === 'routes-layer')
+    const routeFeature = features.find(f =>
+      f.layer?.id === 'routes-casing' ||
+      f.layer?.id === 'routes-core'
+    )
     if (routeFeature && routeFeature.properties) {
       const clickedRouteId = routeFeature.properties.id
       // Use the actual click coordinates from the event
@@ -175,7 +178,7 @@ export default function MapView({ routes }: MapViewProps) {
           ? 'mapbox://styles/mapbox/satellite-streets-v12'
           : 'mapbox://styles/mapbox/outdoors-v12'
       }
-      interactiveLayerIds={['routes-layer']}
+      interactiveLayerIds={['routes-casing', 'routes-core']}
       onClick={handleMapClick}
     >
       <TrackRenderer />

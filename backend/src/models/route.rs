@@ -8,7 +8,7 @@ pub struct Route {
     pub id: Uuid,
     pub name: String,
     pub owner_id: Uuid,
-    pub control_points: Option<serde_json::Value>,
+    pub control_points: serde_json::Value,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -37,5 +37,7 @@ pub struct RouteWithGeometry {
     #[serde(flatten)]
     pub route: Route,
     pub geometry: serde_json::Value,
-    pub control_points: Option<serde_json::Value>,
+    pub length_km: Option<f64>,
+    pub estimated_time_min: Option<i32>,
+    pub created_by: Option<Uuid>,
 }
