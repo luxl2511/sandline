@@ -154,6 +154,7 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
                 user_email={activeDrag?.user_email || null}
                 isMine={isBeingDraggedByMe}
                 onDelete={() => onDelete(route.id, index)}
+                type={index === 0 ? 'start' : index === (route.control_points?.length || 0) - 1 ? 'end' : 'intermediate'}
               />
             </Marker>
           )
