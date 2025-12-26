@@ -106,13 +106,6 @@ impl<'a> RlsTransaction<'a> {
         self.inner.rollback().await?;
         Ok(())
     }
-
-    /// Access the inner transaction for executing queries
-    ///
-    /// Use this method to pass the transaction to SQLx query methods.
-    pub fn as_mut(&mut self) -> &mut Transaction<'a, Postgres> {
-        &mut self.inner
-    }
 }
 
 impl<'a> Deref for RlsTransaction<'a> {
