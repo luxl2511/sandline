@@ -48,6 +48,28 @@ The application aims for a highly interactive and collaborative route planning e
 - **Responsive Dragging:** Drags are responsive, with instant feedback.
 - **Animated Rerouting:** When a point is dragged and released, the recalculation of the route segment(s) is shown with an animation, where the route "appears" or "draws" itself from start to finish along the new path.
 
+### Recent User-Facing Improvements (Dec 2024)
+
+**Error Handling & User Feedback:**
+- **Toast Notifications:** Users now see clear error messages when operations fail (e.g., "Failed to load routes", "Real-time updates disconnected")
+- **Loading States:** A "Loading routes..." indicator appears while the app fetches initial data
+- **Graceful Degradation:** If the app encounters an error, users see a friendly error screen with a "Reload Page" button instead of a blank white screen
+- **Connection Status:** Users are notified when real-time features disconnect or time out, with automatic reconnection attempts
+
+**Reliability Improvements:**
+- **Automatic Retries:** Network requests automatically retry up to 3 times on failure (with exponential backoff)
+- **Stable Authentication:** Fixed authentication modal rendering issues that could prevent login/signup
+- **Real-time Stability:** Improved real-time subscription handling to reduce disconnections
+
+**UI/Layout Fixes:**
+- **Route Statistics Panel:** Now appears below the Route Editor panel (instead of overlapping) when viewing route details
+
+**What This Means for Users:**
+- More reliable app experience with fewer mysterious failures
+- Clear feedback when something goes wrong
+- Automatic recovery from transient network issues
+- Reduced confusion from silent failures
+
 ### Architectural Confirmations
 
 - **Real-time Infrastructure:** Utilizes Supabase for real-time channels to broadcast cursor positions, drag events, and point changes.
