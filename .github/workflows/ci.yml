@@ -84,6 +84,8 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: https://example.com
           NEXT_PUBLIC_MAPBOX_TOKEN: pk.test
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_PUBLISHABLE_KEY: sb_publishable_test
 
   validate-docker:
     name: Validate Docker Build

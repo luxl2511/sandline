@@ -311,3 +311,82 @@ npx playwright test collaboration.spec # Run specific test file
 
 - `AuthUser` extractor should handle `sub` and `email` claims correctly from JWT.
 - RLS policies are critical for proper authorization. `AuthUser` ensures `auth.uid()` and `auth.email()` are available within transactions.
+
+## Deployment
+
+### Automated Deployments (GitHub Actions)
+
+The project uses GitHub Actions for CI/CD:
+
+- **CI Validation** (`.github/workflows/ci.yml`): Runs on every push/PR to main
+  - Validates backend (Rust format, clippy, build, tests)
+  - Validates frontend (lint, type check, build)
+  - Validates Docker build
+- **Backend Deployment** (`.github/workflows/deploy-backend.yml`): Auto-deploys to Fly.io after CI passes
+- **Frontend Deployment** (`.github/workflows/deploy-frontend.yml`): Auto-deploys to Vercel after CI passes
+
+**Required GitHub Secrets:**
+- `FLYIO` - Fly.io API token
+- `VERCEL_TOKEN` - Vercel API token
+- `VERCEL_ORG_ID` - Vercel organization ID
+- `VERCEL_PROJECT_ID` - Vercel project ID
+
+### Manual Deployments (Local)
+
+**Unified Deploy Script:** `./scripts/deploy.sh [backend|frontend|all]`
+
+Examples:
+```bash
+./scripts/deploy.sh backend   # Deploy backend to Fly.io
+./scripts/deploy.sh frontend  # Deploy frontend to Vercel
+./scripts/deploy.sh all       # Deploy both
+```
+
+Prerequisites:
+- Backend: `flyctl` CLI installed and authenticated
+- Frontend: `vercel` CLI installed and authenticated
+
+### Environment Variables
+
+**Backend (Fly.io)** - Set via `flyctl secrets set`:
+- `DATABASE_URL` - PostgreSQL connection string
+- `ALLOWED_ORIGINS` - CORS origins (comma-separated)
+- `SUPABASE_URL` - Supabase project URL
+- `MAPBOX_ACCESS_TOKEN` - Mapbox API token
+
+**Frontend (Vercel)** - Set via `vercel env add` or dashboard:
+- `NEXT_PUBLIC_API_URL` - Backend API URL (e.g., `https://dakar-planner-api.fly.dev`)
+- `NEXT_PUBLIC_MAPBOX_TOKEN` - Mapbox access token
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_PUBLISHABLE_KEY` - Supabase publishable key
+
+### Deployment Flow
+
+**Development:**
+1. Create feature branch
+2. Make changes
+3. Push to GitHub
+4. CI runs automatically
+5. Merge to `main` via PR
+6. Auto-deploys to production
+
+**Hotfix:**
+1. Fix on `main` branch
+2. Run `./scripts/deploy.sh [target]`
+3. Immediate deployment
+
+### Troubleshooting
+
+**Backend:**
+```bash
+flyctl logs              # View logs
+flyctl secrets list      # Check secrets
+flyctl restart          # Restart app
+```
+
+**Frontend:**
+```bash
+vercel logs             # View logs
+vercel env ls           # Check env vars
+vercel --prod --debug   # Deploy with debug output
+```
