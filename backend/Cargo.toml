@@ -40,7 +40,49 @@ anyhow = "1.0"
 thiserror = "2.0"
 
 # Authentication
-jsonwebtoken = { version = "10.2", default-features = false, features = ["rust_crypto"] }
+jsonwebtoken = { version = "10.2", default-features = false, features = [
+  "rust_crypto",
+  "use_pem",
+] }
+reqwest = { version = "0.12", features = ["json"] }
+
+# Geometry processing
+geo = "0.28"
+geo-types = "0.7"
 
 [dev-dependencies]
-reqwest = "0.12"
+# Test framework
+tokio-test = "0.4"
+
+# HTTP testing
+axum-test = "15"
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+
+# Assertions
+assert_matches = "1.5"
+pretty_assertions = "1.4"
+
+# Test fixtures and property testing
+fake = "2.9"
+quickcheck = "1"
+proptest = "1"
+
+# Async utilities for testing
+futures = "0.3"
+
+# Test database utilities
+sqlx = { version = "0.8", features = [
+  "runtime-tokio-rustls",
+  "postgres",
+  "uuid",
+  "chrono",
+  "json",
+  "migrate",
+] }
+
+# Mock HTTP requests (for Mapbox API)
+wiremock = "0.6"
+
+# Time manipulation for testing
+mock_instant = "0.3"

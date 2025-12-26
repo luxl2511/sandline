@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { supabase } from './supabase'
+import axiosRetry from 'axios-retry'
 import type { CuratedTrack, Route, RouteProposal, EditingSession, PointChange } from '@/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
@@ -11,16 +11,87 @@ const api = axios.create({
   },
 })
 
-// Add auth interceptor to attach JWT token to all requests
-api.interceptors.request.use(async (config) => {
-  const { data: { session } } = await supabase.auth.getSession()
+// Configure automatic retry logic
+axiosRetry(api, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: (error) => {
+    // Retry on network errors or 5xx server errors
+    return axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+           (error.response?.status || 0) >= 500
+  },
+  onRetry: (retryCount, error, requestConfig) => {
+    console.log(`Retrying request (${retryCount}/3):`, requestConfig.url)
+  },
+})
 
-  if (session?.access_token) {
-    config.headers.Authorization = `Bearer ${session.access_token}`
+// LocalStorage keys for JWT caching (must match AuthContext)
+const JWT_STORAGE_KEY = 'dakar_planner_jwt'
+const JWT_EXPIRY_KEY = 'dakar_planner_jwt_expiry'
+
+/**
+ * Get cached JWT from localStorage
+ *
+ * This is a synchronous operation that reads from localStorage,
+ * avoiding the need for async Supabase API calls on every request.
+ *
+ * @returns JWT token if valid and not expired, null otherwise
+ */
+const getCachedJWT = (): string | null => {
+  if (typeof window === 'undefined') return null
+
+  const token = localStorage.getItem(JWT_STORAGE_KEY)
+  const expiry = localStorage.getItem(JWT_EXPIRY_KEY)
+
+  if (!token || !expiry) return null
+
+  const expiresAt = parseInt(expiry, 10)
+  const now = Math.floor(Date.now() / 1000) // Current time in seconds
+
+  // Check if token is expired (with 60s buffer to account for clock skew)
+  if (now >= expiresAt - 60) {
+    // Token expired or about to expire - clear it
+    localStorage.removeItem(JWT_STORAGE_KEY)
+    localStorage.removeItem(JWT_EXPIRY_KEY)
+    return null
+  }
+
+  return token
+}
+
+// Add auth interceptor to attach JWT token to all requests
+// PERFORMANCE: Uses synchronous localStorage read instead of async Supabase call
+api.interceptors.request.use((config) => {
+  const token = getCachedJWT()
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
   }
 
   return config
 })
+
+// Add response interceptor for error logging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Extract error details
+    const status = error.response?.status
+    const message = error.response?.data?.message || error.message
+
+    // Log for debugging
+    console.error('[API Error]', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status,
+      message,
+    })
+
+    // Don't throw on client - let calling code handle it
+    // This allows per-request error handling while logging all errors
+    return Promise.reject(error)
+  }
+)
 
 // Tracks
 export async function fetchTracks(
@@ -50,6 +121,7 @@ export async function fetchRouteById(id: string): Promise<Route> {
 export async function createRoute(data: {
   name: string
   geometry: GeoJSON.MultiLineString
+  controlPoints: GeoJSON.Point[]
 }): Promise<Route> {
   const response = await api.post('/api/routes', data)
   return response.data
@@ -60,6 +132,18 @@ export async function updateRoute(
   data: { geometry: GeoJSON.MultiLineString }
 ): Promise<Route> {
   const response = await api.put(`/api/routes/${id}`, data)
+  return response.data
+}
+
+export async function updateRouteControlPoints(
+  id: string,
+  data: {
+    controlPoints: GeoJSON.Point[]
+    featureIndex: number
+    pointIndex: number
+  }
+): Promise<Route> {
+  const response = await api.put(`/api/routes/${id}/control-points`, data)
   return response.data
 }
 

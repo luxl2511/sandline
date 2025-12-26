@@ -6,6 +6,7 @@ pub struct Config {
     pub host: String,
     pub port: u16,
     pub allowed_origins: Vec<String>,
+    pub supabase_url: String,
 }
 
 impl Config {
@@ -30,6 +31,8 @@ impl Config {
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse()?,
             allowed_origins,
+            supabase_url: std::env::var("SUPABASE_URL")
+                .unwrap_or_else(|_| "https://mptcysneksvjwiwqoqmt.supabase.co".to_string()),
         })
     }
 }

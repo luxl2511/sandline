@@ -3,13 +3,27 @@
 import { Source, Layer } from 'react-map-gl'
 import type { PointChange } from '@/types'
 
+export interface LiveDrag {
+  userId: string
+  userEmail: string
+  featureIndex: number
+  pointIndex: number
+  originalPosition: [number, number]
+  newPosition: [number, number]
+}
+
 interface PointChangesLayerProps {
   changes: PointChange[]
+  liveDrags?: LiveDrag[]
   onChangeClick?: (change: PointChange) => void
 }
 
-export default function PointChangesLayer({ changes, onChangeClick }: PointChangesLayerProps) {
-  if (changes.length === 0) return null
+export default function PointChangesLayer({
+  changes,
+  liveDrags = [],
+  onChangeClick,
+}: PointChangesLayerProps) {
+  if (changes.length === 0 && liveDrags.length === 0) return null
 
   // Generate color from user ID hash
   const getColorFromUserId = (userId: string): string => {
@@ -117,6 +131,64 @@ export default function PointChangesLayer({ changes, onChangeClick }: PointChang
     },
   }
 
+  // Create GeoJSON for live drags (real-time broadcasting)
+  const liveDragLinesGeoJSON: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: liveDrags.map((drag) => ({
+      type: 'Feature' as const,
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [drag.originalPosition, drag.newPosition],
+      },
+      properties: {
+        userId: drag.userId,
+        userEmail: drag.userEmail,
+        color: getColorFromUserId(drag.userId),
+      },
+    })),
+  }
+
+  const liveDragMarkersGeoJSON: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: liveDrags.map((drag) => ({
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: drag.newPosition,
+      },
+      properties: {
+        userId: drag.userId,
+        userEmail: drag.userEmail,
+        color: getColorFromUserId(drag.userId),
+      },
+    })),
+  }
+
+  // Pulsing animation for live drags (different from static point changes)
+  const liveDragLineLayer = {
+    id: 'live-drag-lines',
+    type: 'line' as const,
+    paint: {
+      'line-color': ['get', 'color'] as any,
+      'line-width': 3,
+      'line-dasharray': [3, 3] as any,
+      'line-opacity': 0.8, // Slightly more visible than point changes
+    },
+  }
+
+  const liveDragMarkerLayer = {
+    id: 'live-drag-markers',
+    type: 'circle' as const,
+    paint: {
+      'circle-radius': 10,
+      'circle-color': ['get', 'color'] as any,
+      'circle-opacity': 0.6,
+      'circle-stroke-width': 3,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-opacity': 1,
+    },
+  }
+
   return (
     <>
       {/* Connection lines (render first, so they're below markers) */}
@@ -133,6 +205,19 @@ export default function PointChangesLayer({ changes, onChangeClick }: PointChang
       <Source id="point-changes-ghost-markers" type="geojson" data={ghostMarkersGeoJSON}>
         <Layer {...ghostMarkerLayer} />
       </Source>
+
+      {/* LIVE DRAGS: Real-time collaborative dragging */}
+      {liveDrags.length > 0 && (
+        <>
+          <Source id="live-drag-lines" type="geojson" data={liveDragLinesGeoJSON}>
+            <Layer {...liveDragLineLayer} />
+          </Source>
+
+          <Source id="live-drag-markers" type="geojson" data={liveDragMarkersGeoJSON}>
+            <Layer {...liveDragMarkerLayer} />
+          </Source>
+        </>
+      )}
     </>
   )
 }

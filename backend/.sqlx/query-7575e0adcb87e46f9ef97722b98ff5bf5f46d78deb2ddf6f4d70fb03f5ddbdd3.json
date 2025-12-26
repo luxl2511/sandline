@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            r.id, r.name, r.owner_id, r.created_at as \"created_at!\", r.updated_at as \"updated_at!\",\n            rv.geometry\n        FROM routes r\n        LEFT JOIN LATERAL (\n            SELECT geometry\n            FROM route_versions\n            WHERE route_id = r.id\n            ORDER BY created_at DESC\n            LIMIT 1\n        ) rv ON true\n        ORDER BY r.created_at DESC\n        LIMIT 100\n        ",
+  "query": "INSERT INTO routes (name, owner_id, control_points) VALUES ($1, $2, $3) RETURNING *",
   "describe": {
     "columns": [
       {
@@ -20,22 +20,26 @@
       },
       {
         "ordinal": 3,
-        "name": "created_at!",
+        "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
         "ordinal": 4,
-        "name": "updated_at!",
+        "name": "updated_at",
         "type_info": "Timestamptz"
       },
       {
         "ordinal": 5,
-        "name": "geometry",
+        "name": "control_points",
         "type_info": "Jsonb"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Text",
+        "Uuid",
+        "Jsonb"
+      ]
     },
     "nullable": [
       false,
@@ -43,8 +47,8 @@
       false,
       false,
       false,
-      false
+      true
     ]
   },
-  "hash": "664ce6f3cbce978c39e9fd2c9e8b3bf792b856913af76f7cf98e635ae6ca3924"
+  "hash": "7575e0adcb87e46f9ef97722b98ff5bf5f46d78deb2ddf6f4d70fb03f5ddbdd3"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * FROM routes WHERE id = $1",
+  "query": "\n        SELECT\n            id, name, owner_id, control_points, created_at, updated_at\n        FROM routes\n        WHERE id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -20,11 +20,16 @@
       },
       {
         "ordinal": 3,
+        "name": "control_points",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -38,9 +43,10 @@
       false,
       false,
       false,
+      true,
       false,
       false
     ]
   },
-  "hash": "c593d86abe05265dcea5987e508a5b2d43aabb6270242060c7d57bd52d8b199b"
+  "hash": "75a4eea9b63ed8e2b46573b11c3b84ed5d573e5108b3555ca896e73fafedf3de"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT\n            r.id, r.name, r.owner_id, r.created_at as \"created_at!\", r.updated_at as \"updated_at!\",\n            rv.geometry\n        FROM routes r\n        LEFT JOIN LATERAL (\n            SELECT geometry\n            FROM route_versions\n            WHERE route_id = r.id\n            ORDER BY created_at DESC\n            LIMIT 1\n        ) rv ON true\n        WHERE r.id = $1\n        ",
+  "query": "\n        SELECT\n            r.id, r.name, r.owner_id, r.control_points, r.created_at as \"created_at!\", r.updated_at as \"updated_at!\",\n            rv.geometry\n        FROM routes r\n        LEFT JOIN LATERAL (\n            SELECT geometry\n            FROM route_versions\n            WHERE route_id = r.id\n            ORDER BY created_at DESC\n            LIMIT 1\n        ) rv ON true\n        ORDER BY r.created_at DESC\n        LIMIT 100\n        ",
   "describe": {
     "columns": [
       {
@@ -20,33 +20,37 @@
       },
       {
         "ordinal": 3,
+        "name": "control_points",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 4,
         "name": "created_at!",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at!",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "geometry",
         "type_info": "Jsonb"
       }
     ],
     "parameters": {
-      "Left": [
-        "Uuid"
-      ]
+      "Left": []
     },
     "nullable": [
       false,
       false,
       false,
+      true,
       false,
       false,
       false
     ]
   },
-  "hash": "45ffbe422189ed6891e734a0a11aa3af6234c8d167cd83d94f1faf10836a2362"
+  "hash": "bbc0ad38190c4a832238d80211ae8acc4d9b39e15d7ed1024d6f820d672139a6"
 }

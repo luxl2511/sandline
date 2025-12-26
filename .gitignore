@@ -43,3 +43,4 @@ pg_data/
 # Temporary
 tmp/
 temp/
+.vercel

@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import type { MapRef } from "react-map-gl";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { createPointChange } from "@/lib/api";
+import { useRealtimeBroadcast } from "./useRealtimeBroadcast";
 
 export interface UseCollaborativeMapboxDrawOptions {
-  enabled: boolean;
   routeId: string | null;
   currentGeometry: GeoJSON.MultiLineString | null;
   onPointMoved?: (change: {
@@ -64,12 +64,19 @@ export default function useCollaborativeMapboxDraw(
   mapRef: React.RefObject<MapRef>,
   options: UseCollaborativeMapboxDrawOptions
 ) {
+  const { broadcast } = useRealtimeBroadcast(options.routeId);
   const drawRef = useRef<MapboxDraw | null>(null);
   const originalGeometryRef = useRef<GeoJSON.MultiLineString | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartPoint, setDragStartPoint] = useState<{
+    featureIndex: number;
+    pointIndex: number;
+    originalPosition: [number, number];
+  } | null>(null);
 
   useEffect(() => {
     const map = mapRef.current?.getMap();
-    if (!map || !options.enabled || !options.currentGeometry || !options.routeId) {
+    if (!map || !options.routeId || !options.currentGeometry) {
       // Remove draw control if disabled
       if (drawRef.current && map) {
         map.removeControl(drawRef.current);
@@ -145,8 +152,16 @@ export default function useCollaborativeMapboxDraw(
       draw.changeMode("direct_select", { featureId: featureIds[0] });
     }
 
-    // Event handler for vertex updates
-    const handleUpdate = async (e: { features: GeoJSON.Feature[] }) => {
+    // Event handler for drag start (selection change)
+    const handleSelectionChange = () => {
+      // Reset dragging state when selection changes
+      setIsDragging(false);
+      setDragStartPoint(null);
+    };
+
+    // Event handler for vertex updates (throttled broadcast)
+    let throttleTimer: NodeJS.Timeout | null = null;
+    const handleUpdate = (e: { features: GeoJSON.Feature[] }) => {
       if (e.features.length === 0 || !originalGeometryRef.current) return;
 
       const updatedFeature = e.features[0];
@@ -157,11 +172,63 @@ export default function useCollaborativeMapboxDraw(
         updatedFeature.geometry as GeoJSON.MultiLineString
       );
 
+      if (movedPoint && !isDragging) {
+        // Drag just started
+        setIsDragging(true);
+        setDragStartPoint({
+          featureIndex: movedPoint.featureIndex,
+          pointIndex: movedPoint.pointIndex,
+          originalPosition: movedPoint.originalPosition,
+        });
+
+        broadcast("drag_start", {
+          featureIndex: movedPoint.featureIndex,
+          pointIndex: movedPoint.pointIndex,
+          originalPosition: movedPoint.originalPosition,
+        });
+      } else if (movedPoint && isDragging) {
+        // Drag update - throttled to 20fps (50ms)
+        if (!throttleTimer) {
+          throttleTimer = setTimeout(() => {
+            broadcast("drag_update", {
+              featureIndex: movedPoint.featureIndex,
+              pointIndex: movedPoint.pointIndex,
+              newPosition: movedPoint.newPosition,
+            });
+            throttleTimer = null;
+          }, 50);
+        }
+      }
+    };
+
+    // Event handler for mode change (drag end)
+    const handleModeChange = async (e: { mode: string }) => {
+      if (!isDragging || !dragStartPoint) return;
+
+      // Drag ended - get final position
+      const features = draw.getAll().features;
+      if (features.length === 0) return;
+
+      const updatedFeature = features[0];
+      if (updatedFeature.geometry.type !== "MultiLineString") return;
+
+      const movedPoint = findMovedPoint(
+        originalGeometryRef.current!,
+        updatedFeature.geometry as GeoJSON.MultiLineString
+      );
+
       if (movedPoint) {
-        console.log("Point moved:", movedPoint);
+        console.log("Drag ended:", movedPoint);
+
+        // Broadcast drag end
+        broadcast("drag_end", {
+          featureIndex: movedPoint.featureIndex,
+          pointIndex: movedPoint.pointIndex,
+          newPosition: movedPoint.newPosition,
+        });
 
         try {
-          // Submit point change to API
+          // Submit point change to backend (authoritative processing)
           await createPointChange(options.routeId!, {
             featureIndex: movedPoint.featureIndex,
             pointIndex: movedPoint.pointIndex,
@@ -172,7 +239,7 @@ export default function useCollaborativeMapboxDraw(
           // Notify parent component if callback provided
           options.onPointMoved?.(movedPoint);
 
-          // IMPORTANT: Revert the local change
+          // NOW revert (after backend receives it)
           // Keep original position until change is accepted by route owner
           draw.deleteAll();
           draw.add(feature);
@@ -189,23 +256,33 @@ export default function useCollaborativeMapboxDraw(
           }
         }
       }
+
+      // Reset dragging state
+      setIsDragging(false);
+      setDragStartPoint(null);
     };
 
+    map.on("draw.selectionchange", handleSelectionChange);
     map.on("draw.update", handleUpdate);
+    map.on("draw.modechange", handleModeChange);
 
     return () => {
+      map.off("draw.selectionchange", handleSelectionChange);
       map.off("draw.update", handleUpdate);
+      map.off("draw.modechange", handleModeChange);
       if (draw && map.hasControl(draw)) {
         map.removeControl(draw);
+      }
+      if (throttleTimer) {
+        clearTimeout(throttleTimer);
       }
       drawRef.current = null;
       originalGeometryRef.current = null;
     };
   }, [
     mapRef,
-    options.enabled,
-    options.currentGeometry,
     options.routeId,
+    options.currentGeometry,
     options.onPointMoved,
   ]);
 

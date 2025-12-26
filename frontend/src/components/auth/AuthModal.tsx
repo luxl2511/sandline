@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { createPortal } from 'react-dom'
 
 interface AuthModalProps {
   onClose: () => void
@@ -13,7 +14,12 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const { signIn, signUp } = useAuth()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,9 +46,11 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-96">
+  if (!mounted) return null
+
+  return createPortal(
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-96">
         <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-50">
           {mode === 'signin' ? 'Sign In' : 'Sign Up'}
         </h3>
@@ -109,6 +117,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

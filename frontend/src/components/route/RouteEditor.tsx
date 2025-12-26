@@ -1,28 +1,41 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useMapStore } from '@/lib/store'
 import { useAuth } from '@/contexts/AuthContext'
 import ProposalList from './ProposalList'
 import RouteCreationDialog from './RouteCreationDialog'
 import AuthModal from '../auth/AuthModal'
 import PresenceIndicators from './PresenceIndicators'
+import PointChangeProposalList from './PointChangeProposalList' // Import the new component
+import type { Route } from '@/types'
 
-export default function RouteEditor() {
+interface RouteEditorProps {
+  routes: Route[]
+}
+
+export default function RouteEditor({ routes }: RouteEditorProps) {
   const {
-    selectedRoute,
-    setSelectedRoute,
     isDrawing,
-    isEditingRoute,
     startDrawing,
-    startEditingRoute,
-    stopEditingRoute,
     drawnGeometry,
     activeSessions,
+    editingRouteId,
+    setEditingRouteId,
+    clearEditingState,
+    pendingPointChanges, // Get pendingPointChanges from the store
   } = useMapStore()
   const { user } = useAuth()
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+
+  const editingRoute = useMemo(() => {
+    return routes.find(r => r.id === editingRouteId) || null
+  }, [routes, editingRouteId])
+
+  const filteredPendingPointChanges = useMemo(() => {
+    return pendingPointChanges.filter(
+      (change) => change.routeId === editingRouteId && change.status === 'pending'
+    )
+  }, [pendingPointChanges, editingRouteId])
 
   // Show save dialog when user finishes drawing
   useEffect(() => {
@@ -40,21 +53,12 @@ export default function RouteEditor() {
     startDrawing()
   }
 
-  const handleEditRoute = () => {
-    // Require authentication to edit routes
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
-
-    if (!selectedRoute) return
-
-    // Start collaborative editing mode
-    startEditingRoute(selectedRoute.id)
+  const handleViewDetails = (routeId: string) => {
+    setEditingRouteId(routeId)
   }
 
-  const handleStopEditing = () => {
-    stopEditingRoute()
+  const handleCloseDetails = () => {
+    clearEditingState()
   }
 
   return (
@@ -73,7 +77,7 @@ export default function RouteEditor() {
               </p>
             </div>
           </div>
-        ) : !selectedRoute ? (
+        ) : !editingRouteId ? ( // No route selected for detail view
           <div className="space-y-2">
             <button
               onClick={handleCreateRoute}
@@ -81,62 +85,45 @@ export default function RouteEditor() {
             >
               Create New Route
             </button>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Select a route or create a new one to start planning
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+              Select a route on the map to view its details or edit.
             </p>
           </div>
-        ) : (
+        ) : editingRoute ? ( // A route is selected for detail view
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-50">{selectedRoute.name}</h4>
+              <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-50">{editingRoute.name}</h4>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Created: {new Date(selectedRoute.createdAt).toLocaleDateString()}
+                Created: {new Date(editingRoute.createdAt).toLocaleDateString()}
               </p>
             </div>
 
-            {isEditingRoute ? (
-              <>
-                {/* Show presence indicators when editing */}
-                <PresenceIndicators sessions={activeSessions} />
+            {/* Show presence indicators */}
+            <PresenceIndicators sessions={activeSessions} />
 
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-3">
-                  <p className="text-sm font-medium text-green-900 dark:text-green-100 mb-2">
-                    Editing Mode
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300 mb-3">
-                    Click and drag route points to suggest changes. Other collaborators will see your suggestions.
-                  </p>
-                  <button
-                    onClick={handleStopEditing}
-                    className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                  >
-                    Stop Editing
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="space-y-2">
-                <button
-                  onClick={handleEditRoute}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                >
-                  Edit Route
-                </button>
-                <button className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
-                  Create Proposal
-                </button>
-                <button
-                  onClick={() => setSelectedRoute(null)}
-                  className="w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-                >
-                  Close
-                </button>
-              </div>
+            <div className="space-y-2">
+              <button className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm">
+                Create Proposal
+              </button>
+              <button
+                onClick={handleCloseDetails}
+                className="w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
+              >
+                Close Details
+              </button>
+            </div>
+
+            {editingRouteId && <ProposalList routeId={editingRouteId} />}
+
+            {filteredPendingPointChanges.length > 0 && editingRoute && (
+              <PointChangeProposalList
+                pointChanges={filteredPendingPointChanges}
+                routeOwnerId={editingRoute.ownerId}
+                currentUserId={user?.id}
+              />
             )}
-
-            <ProposalList routeId={selectedRoute.id} />
           </div>
-        )}
+        ) : null}
       </div>
 
       {showSaveDialog && (

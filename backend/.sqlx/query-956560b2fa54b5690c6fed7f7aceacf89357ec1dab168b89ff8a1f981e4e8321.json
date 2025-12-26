@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO routes (name, owner_id) VALUES ($1, $2) RETURNING *",
+  "query": "\n        SELECT\n            r.id, r.name, r.owner_id, r.control_points, r.created_at as \"created_at!\", r.updated_at as \"updated_at!\"\n        FROM routes r\n        WHERE r.id = $1\n        ",
   "describe": {
     "columns": [
       {
@@ -20,18 +20,22 @@
       },
       {
         "ordinal": 3,
-        "name": "created_at",
-        "type_info": "Timestamptz"
+        "name": "control_points",
+        "type_info": "Jsonb"
       },
       {
         "ordinal": 4,
-        "name": "updated_at",
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at!",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
       "Left": [
-        "Text",
         "Uuid"
       ]
     },
@@ -39,9 +43,10 @@
       false,
       false,
       false,
+      true,
       false,
       false
     ]
   },
-  "hash": "37992d5ae1a7bc1e586ea1f703d9df55fc850bf98cf9aba085df4294f05f9dce"
+  "hash": "956560b2fa54b5690c6fed7f7aceacf89357ec1dab168b89ff8a1f981e4e8321"
 }

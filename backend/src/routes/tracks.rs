@@ -5,11 +5,11 @@ use axum::{
 };
 use uuid::Uuid;
 
-use crate::db::DbPool;
 use crate::models::{CuratedTrack, TrackQuery};
+use crate::AppState;
 
 pub async fn list_tracks(
-    State(pool): State<DbPool>,
+    State(state): State<AppState>,
     Query(query): Query<TrackQuery>,
 ) -> Result<Json<Vec<CuratedTrack>>, StatusCode> {
     let mut sql = String::from(
@@ -32,7 +32,7 @@ pub async fn list_tracks(
 
     let tracks = sqlx::query_as::<_, CuratedTrack>(&sql)
         .persistent(false)
-        .fetch_all(&pool)
+        .fetch_all(&state.pool)
         .await
         .map_err(|e| {
             tracing::error!("Failed to fetch tracks: {}", e);
@@ -43,7 +43,7 @@ pub async fn list_tracks(
 }
 
 pub async fn get_track(
-    State(pool): State<DbPool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<CuratedTrack>, StatusCode> {
     let track = sqlx::query_as::<_, CuratedTrack>(
@@ -53,7 +53,7 @@ pub async fn get_track(
     )
     .bind(id)
     .persistent(false)
-    .fetch_one(&pool)
+    .fetch_one(&state.pool)
     .await
     .map_err(|e| match e {
         sqlx::Error::RowNotFound => StatusCode::NOT_FOUND,

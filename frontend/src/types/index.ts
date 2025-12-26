@@ -12,7 +12,8 @@ export interface Route {
   id: string
   name: string
   ownerId: string
-  geometry: GeoJSON.MultiLineString
+  geometry: GeoJSON.MultiLineString | null
+  controlPoints: GeoJSON.Point[] | null
   createdAt: string
 }
 
@@ -64,28 +65,25 @@ export interface LayerState {
 
 export interface MapStore {
   layers: LayerState
-  selectedRoute: Route | null
   proposals: RouteProposal[]
   isDrawing: boolean
   drawnGeometry: GeoJSON.Feature[] | null
 
   // Collaborative editing state
-  isEditingRoute: boolean
   editingRouteId: string | null
   editingSession: EditingSession | null
   activeSessions: EditingSession[]
   pendingPointChanges: PointChange[]
 
   toggleLayer: (layer: keyof LayerState) => void
-  setSelectedRoute: (route: Route | null) => void
   setProposals: (proposals: RouteProposal[]) => void
   startDrawing: () => void
   stopDrawing: () => void
   setDrawnGeometry: (geometry: GeoJSON.Feature[] | null) => void
 
   // Collaborative editing actions
-  startEditingRoute: (routeId: string) => void
-  stopEditingRoute: () => void
+  setEditingRouteId: (routeId: string | null) => void
+  clearEditingState: () => void
   setEditingSession: (session: EditingSession | null) => void
   setActiveSessions: (sessions: EditingSession[]) => void
   addPointChange: (change: PointChange) => void

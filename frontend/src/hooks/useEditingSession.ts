@@ -7,17 +7,16 @@ import type { EditingSession } from '@/types'
 
 interface UseEditingSessionOptions {
   routeId: string | null
-  enabled: boolean
 }
 
-export default function useEditingSession({ routeId, enabled }: UseEditingSessionOptions) {
+export default function useEditingSession({ routeId }: UseEditingSessionOptions) {
   const { user } = useAuth()
   const setEditingSession = useMapStore((state) => state.setEditingSession)
   const setActiveSessions = useMapStore((state) => state.setActiveSessions)
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    if (!enabled || !routeId || !user) return
+    if (!routeId || !user) return
 
     let channel: ReturnType<typeof supabase.channel> | null = null
 
@@ -125,5 +124,5 @@ export default function useEditingSession({ routeId, enabled }: UseEditingSessio
 
       cleanup()
     }
-  }, [enabled, routeId, user, setEditingSession, setActiveSessions])
+  }, [routeId, user, setEditingSession, setActiveSessions])
 }

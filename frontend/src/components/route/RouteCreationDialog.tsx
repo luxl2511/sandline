@@ -43,7 +43,12 @@ export default function RouteCreationDialog({ onClose }: RouteCreationDialogProp
         coordinates,
       }
 
-      await createRoute({ name: name.trim(), geometry })
+      const controlPoints: GeoJSON.Point[] = coordinates.flat().map(coord => ({
+        type: 'Point',
+        coordinates: coord,
+      }))
+
+      await createRoute({ name: name.trim(), geometry, controlPoints })
 
       // Success - close dialog and stop drawing
       stopDrawing()

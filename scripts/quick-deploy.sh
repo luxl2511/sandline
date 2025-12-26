@@ -14,11 +14,11 @@ NC='\033[0m' # No Color
 # Check if on main branch
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "main" ]; then
-    echo -e "${RED}❌ You must be on the 'main' branch to deploy.${NC}"
-    echo -e "${YELLOW}Current branch: ${CURRENT_BRANCH}${NC}"
-    echo ""
-    echo "Run: ./scripts/merge-to-main.sh"
-    exit 1
+  echo -e "${RED}❌ You must be on the 'main' branch to deploy.${NC}"
+  echo -e "${YELLOW}Current branch: ${CURRENT_BRANCH}${NC}"
+  echo ""
+  echo "Run: ./scripts/merge-to-main.sh"
+  exit 1
 fi
 
 echo -e "${GREEN}✓ On main branch${NC}"
@@ -40,8 +40,8 @@ echo ""
 read -p "Enter your Supabase DATABASE_URL: " DATABASE_URL
 
 if [ -z "$DATABASE_URL" ]; then
-    echo -e "${RED}❌ DATABASE_URL is required${NC}"
-    exit 1
+  echo -e "${RED}❌ DATABASE_URL is required${NC}"
+  exit 1
 fi
 
 # Step 2: Fly.io
@@ -53,18 +53,18 @@ echo ""
 cd backend
 
 # Check if flyctl is installed
-if ! command -v flyctl &> /dev/null; then
-    echo -e "${RED}❌ flyctl is not installed${NC}"
-    echo "Install: curl -L https://fly.io/install.sh | sh"
-    exit 1
+if ! command -v flyctl &>/dev/null; then
+  echo -e "${RED}❌ flyctl is not installed${NC}"
+  echo "Install: curl -L https://fly.io/install.sh | sh"
+  exit 1
 fi
 
 # Check if already launched
 if [ ! -f fly.toml ]; then
-    echo "Launching new Fly.io app..."
-    flyctl launch --no-deploy
+  echo "Launching new Fly.io app..."
+  flyctl launch --no-deploy
 else
-    echo -e "${GREEN}✓ Fly.io app already configured${NC}"
+  echo -e "${GREEN}✓ Fly.io app already configured${NC}"
 fi
 
 # Set secrets
@@ -73,9 +73,9 @@ flyctl secrets set DATABASE_URL="$DATABASE_URL"
 
 read -p "Enter your Vercel frontend URL (or press Enter to skip): " VERCEL_URL
 if [ ! -z "$VERCEL_URL" ]; then
-    flyctl secrets set ALLOWED_ORIGINS="http://localhost:3000,${VERCEL_URL}"
+  flyctl secrets set ALLOWED_ORIGINS="http://localhost:3000,${VERCEL_URL}"
 else
-    flyctl secrets set ALLOWED_ORIGINS="http://localhost:3000"
+  flyctl secrets set ALLOWED_ORIGINS="http://localhost:3000"
 fi
 
 # Deploy backend
@@ -102,9 +102,9 @@ echo ""
 cd frontend
 
 # Check if vercel is installed
-if ! command -v vercel &> /dev/null; then
-    echo "Installing Vercel CLI..."
-    npm install -g vercel
+if ! command -v vercel &>/dev/null; then
+  echo "Installing Vercel CLI..."
+  npm install -g vercel
 fi
 
 # Get Mapbox token
@@ -112,9 +112,9 @@ echo ""
 read -p "Enter your Mapbox access token (pk.xxx): " MAPBOX_TOKEN
 
 if [ -z "$MAPBOX_TOKEN" ]; then
-    echo -e "${RED}❌ Mapbox token is required${NC}"
-    echo "Get one at: https://account.mapbox.com/access-tokens/"
-    exit 1
+  echo -e "${RED}❌ Mapbox token is required${NC}"
+  echo "Get one at: https://account.mapbox.com/access-tokens/"
+  exit 1
 fi
 
 # Set environment variables
@@ -122,6 +122,8 @@ echo ""
 echo "Setting environment variables..."
 echo "$BACKEND_URL" | vercel env add NEXT_PUBLIC_API_URL production
 echo "$MAPBOX_TOKEN" | vercel env add NEXT_PUBLIC_MAPBOX_TOKEN production
+echo "$NEXT_PUBLIC_SUPABASE_URL" | vercel env add NEXT_PUBLIC_SUPABASE_URL production
+echo "$NEXT_PUBLIC_PUBLISHABLE_KEY" | vercel env add NEXT_PUBLIC_PUBLISHABLE_KEY production
 
 # Deploy frontend
 echo ""

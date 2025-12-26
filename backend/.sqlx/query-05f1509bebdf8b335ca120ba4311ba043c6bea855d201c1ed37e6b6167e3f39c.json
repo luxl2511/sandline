@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH start_snap AS (\n            SELECT\n                id,\n                ST_ClosestPoint(\n                    geometry,\n                    ST_SetSRID(ST_MakePoint($1, $2), 4326)\n                ) as snap_point,\n                confidence\n            FROM curated_tracks\n            WHERE ST_DWithin(\n                geometry::geography,\n                ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,\n                $5\n            )\n            ORDER BY geometry <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)\n            LIMIT 1\n        ),\n        end_snap AS (\n            SELECT\n                ST_ClosestPoint(\n                    geometry,\n                    ST_SetSRID(ST_MakePoint($3, $4), 4326)\n                ) as snap_point\n            FROM curated_tracks\n            WHERE ST_DWithin(\n                geometry::geography,\n                ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography,\n                $5\n            )\n            ORDER BY geometry <-> ST_SetSRID(ST_MakePoint($3, $4), 4326)\n            LIMIT 1\n        )\n        SELECT\n            ST_X(start_snap.snap_point) as start_lng,\n            ST_Y(start_snap.snap_point) as start_lat,\n            ST_X(end_snap.snap_point) as end_lng,\n            ST_Y(end_snap.snap_point) as end_lat,\n            start_snap.confidence\n        FROM start_snap, end_snap\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "start_lng",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 1,
+        "name": "start_lat",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "end_lng",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "end_lat",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "confidence",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      false
+    ]
+  },
+  "hash": "05f1509bebdf8b335ca120ba4311ba043c6bea855d201c1ed37e6b6167e3f39c"
+}

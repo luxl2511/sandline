@@ -7,18 +7,22 @@ echo "=============================="
 cd backend
 
 # Check if flyctl is installed
-if ! command -v flyctl &> /dev/null; then
-    echo "❌ flyctl is not installed. Install it from: https://fly.io/docs/hands-on/install-flyctl/"
-    exit 1
+if ! command -v flyctl &>/dev/null; then
+  echo "❌ flyctl is not installed. Install it from: https://fly.io/docs/hands-on/install-flyctl/"
+  exit 1
 fi
 
 # Check if fly.toml exists
 if [ ! -f fly.toml ]; then
-    echo "❌ fly.toml not found. Run this script from the project root."
-    exit 1
+  echo "❌ fly.toml not found. Run this script from the project root."
+  exit 1
 fi
 
 echo "📦 Building Docker image..."
+echo ""
+
+echo "Preparing SQLX Statements"
+cargo sqlx prepare
 echo ""
 
 # Deploy to Fly.io

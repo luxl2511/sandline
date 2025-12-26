@@ -1,15 +1,13 @@
-mod config;
-mod db;
-mod middleware;
-mod models;
-mod routes;
-
 use axum::{
     http::{header, HeaderValue, Method},
     Router,
 };
+use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+// Use library crate
+use dakar_planner_backend::{config, db, jwks, routes, AppState};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -30,6 +28,23 @@ async fn main() -> anyhow::Result<()> {
     // Initialize database pool
     let pool = db::create_pool(&config.database_url).await?;
     tracing::info!("Database connection established");
+
+    // Initialize JWKS cache
+    let jwks_url = format!("{}/auth/v1/.well-known/jwks.json", config.supabase_url);
+    tracing::info!("Fetching JWKS from {}", jwks_url);
+    let jwks_cache = Arc::new(jwks::JwksCache::new(jwks_url).await?);
+    tracing::info!("JWKS cache initialized");
+
+    // Spawn background JWKS refresh task (runs every 24 hours)
+    jwks_cache.clone().spawn_refresh_task();
+    tracing::info!("JWKS background refresh task started");
+
+    // Create app state
+    let state = AppState {
+        pool,
+        jwks_cache,
+        supabase_jwt_aud: "authenticated".to_string(),
+    };
 
     // CORS configuration with wildcard support
     let allowed_origins = config.allowed_origins.clone();
@@ -70,7 +85,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .nest("/api", routes::api_routes())
         .layer(cors)
-        .with_state(pool);
+        .with_state(state);
 
     // Start server
     let listener =
