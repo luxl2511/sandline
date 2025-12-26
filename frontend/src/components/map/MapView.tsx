@@ -33,7 +33,6 @@ export default function MapView({ routes }: MapViewProps) {
     pendingPointChanges,
     setDrawnGeometry,
     setEditingRouteId,
-    startDrawing,
   } = useMapStore()
 
   const [segmentBubbleInfo, setSegmentBubbleInfo] = useState<({ routeId: string; longitude: number; latitude: number } | null)>(null)
@@ -84,10 +83,9 @@ export default function MapView({ routes }: MapViewProps) {
     }
 
     // If no features clicked, start drawing
-    if (features.length === 0) {
-      startDrawing()
-    }
-  }, [isDrawing, startDrawing, handleRouteClick])
+    // Logic removed to enforce using the "New Route" button
+
+  }, [isDrawing, handleRouteClick])
 
   // Use regular draw hook for route creation
   useMapboxDraw(mapRef, {
