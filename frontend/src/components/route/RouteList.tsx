@@ -24,7 +24,7 @@ export default function RouteList({ routes, onRouteSelect }: RouteListProps) {
               <div className="flex justify-between">
                 <span className="font-medium">{route.name}</span>
                 <span className="text-sm text-gray-500">
-                  {new Date(route.createdAt).toLocaleDateString()}
+                  {new Date(route.created_at).toLocaleDateString()}
                 </span>
               </div>
             </li>

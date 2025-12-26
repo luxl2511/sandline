@@ -122,27 +122,27 @@ export default function MapView({ routes }: MapViewProps) {
   const liveDrags = useMemo(() => {
     // Build map of active drags: userId -> drag state
     const dragStates = new Map<string, {
-      userId: string
-      userEmail: string
-      featureIndex: number
-      pointIndex: number
-      originalPosition: [number, number]
-      newPosition: [number, number]
+      user_id: string
+      user_email: string
+      feature_index: number
+      point_index: number
+      original_position: [number, number]
+      new_position: [number, number]
     }>()
 
     // Process messages chronologically to track drag lifecycle
     messages.forEach((m) => {
-      const key = `${m.userId}-${m.data.featureIndex}-${m.data.pointIndex}`
+      const key = `${m.user_id}-${m.data.feature_index}-${m.data.point_index}`
 
       if (m.type === 'drag_start') {
         // Start tracking this drag
         dragStates.set(key, {
-          userId: m.userId,
-          userEmail: m.userEmail,
-          featureIndex: m.data.featureIndex,
-          pointIndex: m.data.pointIndex,
-          originalPosition: m.data.originalPosition,
-          newPosition: m.data.originalPosition, // Initially same as original
+          user_id: m.user_id,
+          user_email: m.user_email,
+          feature_index: m.data.feature_index,
+          point_index: m.data.point_index,
+          original_position: m.data.original_position,
+          new_position: m.data.original_position, // Initially same as original
         })
       } else if (m.type === 'drag_update') {
         // Update position if we're tracking this drag
@@ -150,7 +150,7 @@ export default function MapView({ routes }: MapViewProps) {
         if (existing) {
           dragStates.set(key, {
             ...existing,
-            newPosition: m.data.newPosition,
+            new_position: m.data.new_position,
           })
         }
       } else if (m.type === 'drag_end') {

@@ -45,18 +45,18 @@ export default function PresenceIndicators({ sessions }: PresenceIndicatorsProps
         <div className="flex -space-x-2">
           {visibleSessions.map((session) => (
             <div
-              key={session.userId}
-              className={`w-8 h-8 rounded-full ${getColorFromEmail(session.userEmail)} flex items-center justify-center text-white text-xs font-semibold border-2 border-white dark:border-gray-800`}
-              title={session.userEmail}
+              key={session.user_id}
+              className={`w-8 h-8 rounded-full ${getColorFromEmail(session.user_email)} flex items-center justify-center text-white text-xs font-semibold border-2 border-white dark:border-gray-800`}
+              title={session.user_email}
             >
-              {session.userAvatarUrl ? (
+              {session.user_avatar_url ? (
                 <img
-                  src={session.userAvatarUrl}
-                  alt={session.userEmail}
+                  src={session.user_avatar_url}
+                  alt={session.user_email}
                   className="w-full h-full rounded-full"
                 />
               ) : (
-                getInitials(session.userEmail)
+                getInitials(session.user_email)
               )}
             </div>
           ))}
@@ -76,7 +76,7 @@ export default function PresenceIndicators({ sessions }: PresenceIndicatorsProps
       </div>
       {sessions.length > 0 && (
         <div className="mt-2 text-xs text-blue-700 dark:text-blue-300">
-          {sessions.map((s) => s.userEmail.split('@')[0]).join(', ')}
+          {sessions.map((s) => s.user_email.split('@')[0]).join(', ')}
         </div>
       )}
     </div>

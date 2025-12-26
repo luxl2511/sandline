@@ -33,7 +33,7 @@ export default function RouteEditor({ routes }: RouteEditorProps) {
 
   const filteredPendingPointChanges = useMemo(() => {
     return pendingPointChanges.filter(
-      (change) => change.routeId === editingRouteId && change.status === 'pending'
+      (change) => change.route_id === editingRouteId && change.status === 'pending'
     )
   }, [pendingPointChanges, editingRouteId])
 
@@ -94,7 +94,7 @@ export default function RouteEditor({ routes }: RouteEditorProps) {
             <div>
               <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-50">{editingRoute.name}</h4>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                Created: {new Date(editingRoute.createdAt).toLocaleDateString()}
+                Created: {new Date(editingRoute.created_at).toLocaleDateString()}
               </p>
             </div>
 
@@ -118,7 +118,7 @@ export default function RouteEditor({ routes }: RouteEditorProps) {
             {filteredPendingPointChanges.length > 0 && editingRoute && (
               <PointChangeProposalList
                 pointChanges={filteredPendingPointChanges}
-                routeOwnerId={editingRoute.ownerId}
+                routeOwnerId={editingRoute.owner_id}
                 currentUserId={user?.id}
               />
             )}

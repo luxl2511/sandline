@@ -4,25 +4,25 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useMemo } from 'react'
 
 interface ControlPointPinProps {
-  userEmail?: string | null // User dragging this point, if any
+  user_email?: string | null // User dragging this point, if any
   isMine: boolean // Is this point being dragged by the current user
   onDelete: () => void
 }
 
-export default function ControlPointPin({ userEmail, isMine, onDelete }: ControlPointPinProps) {
+export default function ControlPointPin({ user_email, isMine, onDelete }: ControlPointPinProps) {
   const { user: currentUser } = useAuth()
 
   const pinColor = useMemo(() => {
     if (isMine) return 'from-blue-500 to-blue-600' // Current user's point
-    if (userEmail) return 'from-red-500 to-red-600' // Another user is dragging
+    if (user_email) return 'from-red-500 to-red-600' // Another user is dragging
     return 'from-purple-500 to-purple-600' // Default - gamey purple
-  }, [isMine, userEmail])
+  }, [isMine, user_email])
 
   const glowColor = useMemo(() => {
     if (isMine) return 'shadow-blue-500/50' // Current user's point
-    if (userEmail) return 'shadow-red-500/50' // Another user is dragging
+    if (user_email) return 'shadow-red-500/50' // Another user is dragging
     return 'shadow-purple-500/50' // Default
-  }, [isMine, userEmail])
+  }, [isMine, user_email])
 
   return (
     <div className="relative group">
@@ -30,7 +30,7 @@ export default function ControlPointPin({ userEmail, isMine, onDelete }: Control
       <div className={`
         relative flex flex-col items-center
         transition-all duration-200 ease-out transform hover:scale-110
-        ${userEmail ? 'animate-pulse' : ''}
+        ${user_email ? 'animate-pulse' : ''}
       `}>
         {/* Pin Head - Teardrop/Pin shape */}
         <div className={`
@@ -45,7 +45,7 @@ export default function ControlPointPin({ userEmail, isMine, onDelete }: Control
           <div className="w-3 h-3 rounded-full bg-white/90" />
 
           {/* Pulse animation ring for active drag */}
-          {userEmail && (
+          {user_email && (
             <div className="absolute inset-0 rounded-full bg-red-400/30 animate-ping" />
           )}
         </div>
@@ -55,24 +55,24 @@ export default function ControlPointPin({ userEmail, isMine, onDelete }: Control
           w-0 h-0
           border-l-[8px] border-l-transparent
           border-r-[8px] border-r-transparent
-          border-t-[12px] ${isMine ? 'border-t-blue-600' : userEmail ? 'border-t-red-600' : 'border-t-purple-600'}
+          border-t-[12px] ${isMine ? 'border-t-blue-600' : user_email ? 'border-t-red-600' : 'border-t-purple-600'}
           filter drop-shadow-md
           -mt-1
         `} />
 
         {/* User label */}
-        {userEmail && (
+        {user_email && (
           <span className={`
             absolute -top-8 left-1/2 -translate-x-1/2
             px-2 py-1 text-xs font-bold text-white
             rounded-md bg-red-600 whitespace-nowrap
             shadow-lg animate-bounce
           `}>
-            {userEmail.split('@')[0]}
+            {user_email.split('@')[0]}
           </span>
         )}
 
-        {!userEmail && currentUser && isMine && (
+        {!user_email && currentUser && isMine && (
           <span className={`
             absolute -top-8 left-1/2 -translate-x-1/2
             px-2 py-1 text-xs font-bold text-white

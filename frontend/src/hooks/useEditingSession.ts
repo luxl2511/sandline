@@ -24,18 +24,18 @@ export default function useEditingSession({ routeId }: UseEditingSessionOptions)
       try {
         // Join editing session
         const response = await joinEditingSession(routeId, {
-          userEmail: user.email || '',
-          userAvatarUrl: user.user_metadata?.avatar_url,
+          user_email: user.email || '',
+          user_avatar_url: user.user_metadata?.avatar_url,
         })
 
         setEditingSession({
-          userId: response.userId,
-          userEmail: user.email || '',
-          userAvatarUrl: user.user_metadata?.avatar_url,
-          startedAt: response.startedAt,
+          user_id: response.user_id,
+          user_email: user.email || '',
+          user_avatar_url: user.user_metadata?.avatar_url,
+          started_at: response.started_at,
         })
 
-        setActiveSessions(response.activeSessions)
+        setActiveSessions(response.active_sessions)
 
         // Subscribe to Supabase Presence for real-time session tracking
         channel = supabase.channel(`route-editing:${routeId}`, {
@@ -53,12 +53,12 @@ export default function useEditingSession({ routeId }: UseEditingSessionOptions)
             const sessions: EditingSession[] = Object.values(state)
               .flat()
               .map((presence: any) => ({
-                userId: presence.user_id,
-                userEmail: presence.user_email,
-                userAvatarUrl: presence.user_avatar_url,
-                startedAt: presence.started_at,
+                user_id: presence.user_id,
+                user_email: presence.user_email,
+                user_avatar_url: presence.user_avatar_url,
+                started_at: presence.started_at,
               }))
-              .filter((s) => s.userId !== user.id) // Exclude current user
+              .filter((s) => s.user_id !== user.id) // Exclude current user
             setActiveSessions(sessions)
           })
           .on('presence', { event: 'join' }, ({ key, newPresences }) => {

@@ -44,12 +44,12 @@ export default function LiveCursorsLayer({ cursors }: LiveCursorsLayerProps) {
   return (
     <>
       {cursors.map((cursor) => {
-        const session = activeSessions.find((s) => s.userId === cursor.userId)
-        const color = getColorFromEmail(cursor.userEmail)
-        const username = cursor.userEmail.split('@')[0]
+        const session = activeSessions.find((s) => s.user_id === cursor.user_id)
+        const color = getColorFromEmail(cursor.user_email)
+        const username = cursor.user_email.split('@')[0]
 
         return (
-          <Marker key={cursor.userId} longitude={cursor.lng} latitude={cursor.lat}>
+          <Marker key={cursor.user_id} longitude={cursor.lng} latitude={cursor.lat}>
             <div className="relative pointer-events-none">
               {/* Cursor SVG */}
               <svg

@@ -6,8 +6,8 @@ import type { MapRef } from "react-map-gl";
 import { useRealtimeBroadcast } from "./useRealtimeBroadcast";
 
 export interface CursorPosition {
-  userId: string;
-  userEmail: string;
+  user_id: string;
+  user_email: string;
   lng: number;
   lat: number;
   timestamp: number;
@@ -55,9 +55,9 @@ export function useLiveCursors(
       .forEach((msg) => {
         setCursors((prev) => {
           const next = new Map(prev);
-          next.set(msg.userId, {
-            userId: msg.userId,
-            userEmail: msg.userEmail,
+          next.set(msg.user_id, {
+            user_id: msg.user_id,
+            user_email: msg.user_email,
             lng: msg.data.lng,
             lat: msg.data.lat,
             timestamp: Date.now(),

@@ -7,8 +7,8 @@ import { useAuth } from '@/contexts/AuthContext'
 
 interface BroadcastMessage {
   type: 'cursor_move' | 'drag_start' | 'drag_update' | 'drag_end'
-  userId: string
-  userEmail: string
+  user_id: string
+  user_email: string
   data: any
 }
 
@@ -41,7 +41,7 @@ export function useRealtimeBroadcast(routeId: string | null) {
     // Listen to broadcast events
     newChannel
       .on('broadcast', { event: 'ephemeral' }, (payload) => {
-        if (payload.payload.userId !== user.id) {
+        if (payload.payload.user_id !== user.id) {
           // Only process messages from other users (no echo)
           setMessages((prev) => [...prev, payload.payload])
         }
@@ -65,8 +65,8 @@ export function useRealtimeBroadcast(routeId: string | null) {
         event: 'ephemeral',
         payload: {
           type,
-          userId: user.id,
-          userEmail: user.email,
+          user_id: user.id,
+          user_email: user.email,
           data,
         },
       })

@@ -182,18 +182,18 @@ export default function useCollaborativeMapboxDraw(
         });
 
         broadcast("drag_start", {
-          featureIndex: movedPoint.featureIndex,
-          pointIndex: movedPoint.pointIndex,
-          originalPosition: movedPoint.originalPosition,
+          feature_index: movedPoint.featureIndex,
+          point_index: movedPoint.pointIndex,
+          original_position: movedPoint.originalPosition,
         });
       } else if (movedPoint && isDragging) {
         // Drag update - throttled to 20fps (50ms)
         if (!throttleTimer) {
           throttleTimer = setTimeout(() => {
             broadcast("drag_update", {
-              featureIndex: movedPoint.featureIndex,
-              pointIndex: movedPoint.pointIndex,
-              newPosition: movedPoint.newPosition,
+              feature_index: movedPoint.featureIndex,
+              point_index: movedPoint.pointIndex,
+              new_position: movedPoint.newPosition,
             });
             throttleTimer = null;
           }, 50);
@@ -222,9 +222,9 @@ export default function useCollaborativeMapboxDraw(
 
         // Broadcast drag end
         broadcast("drag_end", {
-          featureIndex: movedPoint.featureIndex,
-          pointIndex: movedPoint.pointIndex,
-          newPosition: movedPoint.newPosition,
+          feature_index: movedPoint.featureIndex,
+          point_index: movedPoint.pointIndex,
+          new_position: movedPoint.newPosition,
         });
 
         try {

@@ -43,7 +43,7 @@ export default function ProposalList({ routeId }: ProposalListProps) {
                 {proposal.status}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                {new Date(proposal.createdAt).toLocaleDateString()}
+                {new Date(proposal.created_at).toLocaleDateString()}
               </span>
             </div>
           </div>

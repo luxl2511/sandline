@@ -46,9 +46,9 @@ export default function PointChangeProposalList({
         {pointChanges.map((change) => (
           <li key={change.id} className="py-2 text-sm">
             <p className="text-gray-700 dark:text-gray-300">
-              <span className="font-medium">{change.userEmail.split('@')[0]}</span> proposed a change to point{' '}
+              <span className="font-medium">{change.user_email.split('@')[0]}</span> proposed a change to point{' '}
               <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
-                [{change.featureIndex}, {change.pointIndex}]
+                [{change.feature_index}, {change.point_index}]
               </span>
             </p>
             <div className="flex space-x-2 mt-2">

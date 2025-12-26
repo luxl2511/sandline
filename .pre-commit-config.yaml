@@ -20,12 +20,32 @@ repos:
         pass_filenames: false
         files: ^backend/
 
+  - repo: local
+    hooks:
+      - id: cargo-clippy
+        name: Linting Rust Files
+        entry: bash -c 'cd backend && cargo clippy -- -D warnings'
+        language: system
+        types: [rust]
+        pass_filenames: false
+        files: ^backend/
+
   # Frontend linting
   - repo: local
     hooks:
       - id: eslint
         name: ESLint (frontend)
         entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        types: [javascript, jsx, ts, tsx]
+        files: ^frontend/
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: estypecheck
+        name: ES Type Checks
+        entry: bash -c 'cd frontend && npx tsc --noEmit'
         language: system
         types: [javascript, jsx, ts, tsx]
         files: ^frontend/

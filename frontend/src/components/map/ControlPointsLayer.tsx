@@ -14,10 +14,10 @@ interface ControlPointsLayerProps {
 }
 
 interface ActiveDrag {
-  userId: string
-  userEmail: string
-  routeId: string
-  pointIndex: number
+  user_id: string
+  user_email: string
+  route_id: string
+  point_index: number
 }
 
 export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) {
@@ -30,19 +30,19 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
   useEffect(() => {
     messages.forEach(msg => {
       if (msg.type === 'drag_start' || msg.type === 'drag_update') {
-        const key = `${msg.data.routeId}-${msg.data.pointIndex}`
+        const key = `${msg.data.route_id}-${msg.data.point_index}`
         setActiveDrags(prev => {
           const next = new Map(prev)
           next.set(key, {
-            userId: msg.userId,
-            userEmail: msg.userEmail,
-            routeId: msg.data.routeId,
-            pointIndex: msg.data.pointIndex,
+            user_id: msg.user_id,
+            user_email: msg.user_email,
+            route_id: msg.data.route_id,
+            point_index: msg.data.point_index,
           })
           return next
         })
       } else if (msg.type === 'drag_end') {
-        const key = `${msg.data.routeId}-${msg.data.pointIndex}`
+        const key = `${msg.data.route_id}-${msg.data.point_index}`
         setActiveDrags(prev => {
           const next = new Map(prev)
           next.delete(key)
@@ -57,18 +57,18 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
     const key = `${routeId}-${pointIndex}`
     setActiveDrags(prev => {
       const next = new Map(prev)
-      next.set(key, { userId: user.id, userEmail: user.email || '', routeId, pointIndex })
+      next.set(key, { user_id: user.id, user_email: user.email || '', route_id: routeId, point_index: pointIndex })
       return next
     })
-    broadcast('drag_start', { routeId, pointIndex })
+    broadcast('drag_start', { route_id: routeId, point_index: pointIndex })
   }
 
   const onDrag = (e: any, routeId: string, pointIndex: number) => {
     if (!user) return
     broadcast('drag_update', {
-      routeId,
-      pointIndex,
-      newPosition: [e.lngLat.lng, e.lngLat.lat],
+      route_id: routeId,
+      point_index: pointIndex,
+      new_position: [e.lngLat.lng, e.lngLat.lat],
     })
   }
 
@@ -81,15 +81,15 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
       return next
     })
     broadcast('drag_end', {
-      routeId,
-      pointIndex,
-      newPosition: [e.lngLat.lng, e.lngLat.lat],
+      route_id: routeId,
+      point_index: pointIndex,
+      new_position: [e.lngLat.lng, e.lngLat.lat],
     })
 
     const route = routes.find(r => r.id === routeId)
-    if (!route || !route.controlPoints) return
+    if (!route || !route.control_points) return
 
-    const newControlPoints = [...route.controlPoints]
+    const newControlPoints = [...route.control_points]
     newControlPoints[pointIndex] = {
       type: 'Point',
       coordinates: [e.lngLat.lng, e.lngLat.lat],
@@ -113,9 +113,9 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
 
   const onDelete = async (routeId: string, pointIndex: number) => {
     const route = routes.find(r => r.id === routeId)
-    if (!route || !route.controlPoints) return
+    if (!route || !route.control_points) return
 
-    const newControlPoints = [...route.controlPoints]
+    const newControlPoints = [...route.control_points]
     newControlPoints.splice(pointIndex, 1)
 
     try {
@@ -132,12 +132,12 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
   return (
     <>
       {routes.map(route =>
-        route.controlPoints?.map((point, index) => {
+        route.control_points?.map((point, index) => {
           const key = `${route.id}-${index}`
           const activeDrag = activeDrags.get(key)
-          const isBeingDraggedByMe = activeDrag?.userId === user?.id
-          const isBeingDraggedByOther = activeDrag && activeDrag.userId !== user?.id
-          const isStartOrEnd = index === 0 || index === (route.controlPoints?.length || 0) - 1
+          const isBeingDraggedByMe = activeDrag?.user_id === user?.id
+          const isBeingDraggedByOther = activeDrag && activeDrag.user_id !== user?.id
+          const isStartOrEnd = index === 0 || index === (route.control_points?.length || 0) - 1
 
           return (
             <Marker
@@ -151,7 +151,7 @@ export default function ControlPointsLayer({ routes }: ControlPointsLayerProps) 
               onClick={() => isStartOrEnd && handleExtendRoute(point)}
             >
               <ControlPointPin
-                userEmail={activeDrag?.userEmail || null}
+                user_email={activeDrag?.user_email || null}
                 isMine={isBeingDraggedByMe}
                 onDelete={() => onDelete(route.id, index)}
               />

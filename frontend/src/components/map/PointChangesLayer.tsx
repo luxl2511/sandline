@@ -4,12 +4,12 @@ import { Source, Layer } from 'react-map-gl'
 import type { PointChange } from '@/types'
 
 export interface LiveDrag {
-  userId: string
-  userEmail: string
-  featureIndex: number
-  pointIndex: number
-  originalPosition: [number, number]
-  newPosition: [number, number]
+  user_id: string
+  user_email: string
+  feature_index: number
+  point_index: number
+  original_position: [number, number]
+  new_position: [number, number]
 }
 
 interface PointChangesLayerProps {
@@ -50,13 +50,13 @@ export default function PointChangesLayer({
       type: 'Feature' as const,
       geometry: {
         type: 'Point' as const,
-        coordinates: change.newPosition,
+        coordinates: change.new_position,
       },
       properties: {
         changeId: change.id,
-        userId: change.userId,
-        userEmail: change.userEmail,
-        color: getColorFromUserId(change.userId),
+        user_id: change.user_id,
+        user_email: change.user_email,
+        color: getColorFromUserId(change.user_id),
       },
     })),
   }
@@ -68,12 +68,12 @@ export default function PointChangesLayer({
       type: 'Feature' as const,
       geometry: {
         type: 'Point' as const,
-        coordinates: change.originalPosition,
+        coordinates: change.original_position,
       },
       properties: {
         changeId: change.id,
-        userId: change.userId,
-        color: getColorFromUserId(change.userId),
+        user_id: change.user_id,
+        color: getColorFromUserId(change.user_id),
       },
     })),
   }
@@ -85,12 +85,12 @@ export default function PointChangesLayer({
       type: 'Feature' as const,
       geometry: {
         type: 'LineString' as const,
-        coordinates: [change.originalPosition, change.newPosition],
+        coordinates: [change.original_position, change.new_position],
       },
       properties: {
         changeId: change.id,
-        userId: change.userId,
-        color: getColorFromUserId(change.userId),
+        user_id: change.user_id,
+        color: getColorFromUserId(change.user_id),
       },
     })),
   }
@@ -138,12 +138,12 @@ export default function PointChangesLayer({
       type: 'Feature' as const,
       geometry: {
         type: 'LineString' as const,
-        coordinates: [drag.originalPosition, drag.newPosition],
+        coordinates: [drag.original_position, drag.new_position],
       },
       properties: {
-        userId: drag.userId,
-        userEmail: drag.userEmail,
-        color: getColorFromUserId(drag.userId),
+        user_id: drag.user_id,
+        user_email: drag.user_email,
+        color: getColorFromUserId(drag.user_id),
       },
     })),
   }
@@ -154,12 +154,12 @@ export default function PointChangesLayer({
       type: 'Feature' as const,
       geometry: {
         type: 'Point' as const,
-        coordinates: drag.newPosition,
+        coordinates: drag.new_position,
       },
       properties: {
-        userId: drag.userId,
-        userEmail: drag.userEmail,
-        color: getColorFromUserId(drag.userId),
+        user_id: drag.user_id,
+        user_email: drag.user_email,
+        color: getColorFromUserId(drag.user_id),
       },
     })),
   }
